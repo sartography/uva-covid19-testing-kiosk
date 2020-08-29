@@ -396,3 +396,6 @@ Temporary Items
 .history
 
 # End of https://www.toptal.com/developers/gitignore/api/reactnative,visualstudiocode,pycharm+all
+
+.expo
+.expo-shared
