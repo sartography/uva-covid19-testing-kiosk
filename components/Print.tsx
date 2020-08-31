@@ -1,5 +1,6 @@
 import React, {ReactElement} from 'react';
 import {Button, Text, View} from 'react-native';
+// @ts-ignore
 import Barcode from 'react-native-barcode-builder';
 import {BarCodeProps, ButtonProps, PrintingProps} from '../models/ElementProps';
 import {styles} from './Styles';
