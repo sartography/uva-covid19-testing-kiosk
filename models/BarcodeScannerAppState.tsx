@@ -6,4 +6,5 @@ export enum BarcodeScannerAppState {
   PRINTING = 'PRINTING',
   PRINTED = 'PRINTED',
   ERROR = 'ERROR',
+  SETTINGS = 'SETTINGS',
 }

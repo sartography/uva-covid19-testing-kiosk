@@ -2,7 +2,7 @@ import React, {ReactElement, useEffect, useState} from 'react';
 import {Text, View} from 'react-native';
 // @ts-ignore
 import Barcode from 'react-native-barcode-builder';
-import {Button} from 'react-native-paper';
+import {Button, Title} from 'react-native-paper';
 import {BarCodeProps, ButtonProps, PrintingProps} from '../models/ElementProps';
 import {colors, styles} from './Styles';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -146,7 +146,7 @@ export const PrintingMessage = (props: PrintingProps): ReactElement => {
       <BarCodeDisplay id={props.id} date={props.date} location={props.location} />
     </View>
     <View style={styles.container}>
-      <Text style={styles.heading}>{statusStr}</Text>
+      <Title style={styles.heading}>{statusStr}</Title>
       <RetryButton />
       <Button
         icon="cancel"

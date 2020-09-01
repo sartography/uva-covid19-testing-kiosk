@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {DarkTheme} from 'react-native-paper';
+import {DefaultTheme, DarkTheme} from 'react-native-paper';
 
 
 export const colors = {
@@ -10,30 +10,97 @@ export const colors = {
   notification: '#E57200',
 };
 
-export const styles = StyleSheet.create({
+const _common = StyleSheet.create({
   container: {
+    ...StyleSheet.absoluteFillObject,
     flex: 1,
-    backgroundColor: colors.primary,
     alignItems: 'stretch',
     flexDirection: 'column',
     justifyContent: 'center',
-    paddingVertical: 40,
+    padding: 40,
+  },
+  dark: {
+    backgroundColor: colors.primary,
+    color: DarkTheme.colors.text,
+  },
+  light: {
+    backgroundColor: DefaultTheme.colors.background,
+    color: DefaultTheme.colors.text,
   },
   heading: {
-    color: colors.onBackground,
     fontSize: 40,
     padding: 40,
     textAlign: 'center',
+  },
+});
+
+export const styles = StyleSheet.create({
+  captureBox: {
+    borderStyle: 'solid',
+    borderColor: 'green',
+    borderWidth: 10,
+    height: 213,
+    width: 338,
+    borderRadius: 20,
+ },
+  centerMiddle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  container: {
+    ..._common.container,
+    ..._common.dark,
+  },
+  containerDark: {
+    ..._common.container,
+    ..._common.dark,
+  },
+  containerLight: {
+    ..._common.container,
+    ..._common.light,
+  },
+  containerNoPadding: {
+    ..._common.container,
+    padding: 0,
+  },
+  error: {
+    backgroundColor: colors.error,
+    color: colors.onBackground,
+    fontSize: 20,
+  },
+  subtitle: {
+    color: colors.onBackground,
+    fontSize: 20,
+    padding: 20,
+    textAlign: 'center',
+  },
+  heading: {
+    ..._common.heading,
+    color: colors.onBackground,
+  },
+  headingInverse: {
+    ..._common.heading,
+    color: DefaultTheme.colors.text,
   },
   btnLg: {
     fontSize: 20,
     padding: 4,
     margin: 4,
   },
+  btnWhite: {
+    color: DefaultTheme.colors.text,
+    backgroundColor: DefaultTheme.colors.background
+  },
   button: {
     color: colors.text,
   },
-  fullScreen: StyleSheet.absoluteFillObject,
+  fullScreen: {
+    ...StyleSheet.absoluteFillObject,
+    flex: 1,
+    alignItems: 'stretch',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
   label: {
     fontSize: 16,
   },
@@ -66,5 +133,23 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
-  }
+  },
+  safeAreaView: {
+    flex: 1
+  },
+  row: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settings: {
+    flex: 1,
+    alignItems: 'stretch',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    padding: 80,
+    backgroundColor: DefaultTheme.colors.background,
+    color: DefaultTheme.colors.text,
+  },
 });

@@ -1,7 +1,16 @@
 import {BarCodeEvent, BarCodeScanner, PermissionResponse} from 'expo-barcode-scanner';
-import React, {useEffect, useState} from 'react';
-import {AppRegistry, SafeAreaView, Text, View} from 'react-native';
-import {Appbar, DarkTheme, DefaultTheme, Provider as PaperProvider, Surface} from 'react-native-paper';
+import React, {ReactElement, useEffect, useState} from 'react';
+import {AppRegistry, SafeAreaView, View} from 'react-native';
+import {
+  Appbar,
+  Button, DarkTheme,
+  DefaultTheme,
+  HelperText,
+  Provider as PaperProvider,
+  Snackbar, Subheading,
+  TextInput,
+  Title
+} from 'react-native-paper';
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
 import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
@@ -15,7 +24,7 @@ const theme = {
   colors: colors,
 }
 
-export default function Main () {
+export default function Main() {
   const [appState, setAppState] = useState<BarcodeScannerAppState>(BarcodeScannerAppState.INITIAL);
   const [barCodeData, setBarCodeData] = useState<string>('');
   const [date, setDate] = useState<Date>(new Date());
@@ -31,41 +40,108 @@ export default function Main () {
     });
   }, []);
 
+  const _doNothing = () => {};
   const _scan = () => setAppState(BarcodeScannerAppState.SCANNING);
   const _print = () => setAppState(BarcodeScannerAppState.PRINTING);
   const _home = () => setAppState(BarcodeScannerAppState.DEFAULT);
+  const _settings = () => setAppState(BarcodeScannerAppState.SETTINGS);
 
   const handleBarCodeScanned = (e: BarCodeEvent) => {
-    setBarCodeData(e.data);
-    setDate(new Date());
-    setAppState(BarcodeScannerAppState.SCANNED);
+    // Make sure the data is the right length.
+    const barCodeString = e.data;
+    const pattern = /^[\d]{14}$/;
+    if (pattern.test(barCodeString)) {
+      setBarCodeData(e.data);
+      setDate(new Date());
+      setAppState(BarcodeScannerAppState.SCANNED);
+    } else {
+      setAppState(BarcodeScannerAppState.ERROR);
+    }
   };
 
-  function ErrorMessage(props: ElementProps) {
-    return <Text>Something went wrong.</Text>;
+  function ErrorMessage(props: ElementProps): ReactElement {
+    return <View style={styles.fullScreen}>
+      <View style={styles.container}>
+        <ScanButton onClicked={_scan}/>
+      </View>
+      <Snackbar
+        visible={appState === BarcodeScannerAppState.ERROR}
+        onDismiss={_doNothing}
+        style={styles.error}
+      >Something went wrong. Try again.</Snackbar>
+    </View>
   }
 
-  function LoadingMessage(props: ElementProps) {
-    return <Text>Loading...</Text>;
+  function LoadingMessage(props: ElementProps): ReactElement {
+    return <Snackbar
+      visible={appState === BarcodeScannerAppState.INITIAL}
+      onDismiss={_doNothing}
+    >Loading...</Snackbar>;
   }
 
-  function SuccessMessage(props: ElementProps) {
-    return <Text>Your barcode label has printed successfully.</Text>;
+  function SuccessMessage(props: ElementProps): ReactElement {
+    return <Title>Your barcode label has printed successfully.</Title>;
   }
 
-  function ActionButtons(props: ElementProps) {
-    return <View style={styles.container}>
+  function ActionButtons(props: ElementProps): ReactElement {
+    return <View>
       <PrintButton onClicked={_print}/>
       <CancelButton onClicked={_home}/>
     </View>
   }
 
-  function App(props: StateProps) {
+  function SettingsModal(props: ElementProps): ReactElement {
+    const [inputStr, setInputStr] = useState<string>(locationStr);
+    const pattern = /^[\d]{4}$/;
+    const hasErrors = () => {
+      return !pattern.test(inputStr);
+    };
+
+    return <View style={styles.settings}>
+      <Title style={styles.headingInverse}>Settings</Title>
+      <View style={{marginBottom: 10}}>
+        <Subheading style={{color: DefaultTheme.colors.text, marginBottom: 60}}>
+          Please do NOT change this unless you know what you are doing. Entering an incorrect location number may prevent patients from getting accurate info about their test results.
+        </Subheading>
+        <TextInput
+          label="Location #"
+          value={inputStr}
+          onChangeText={inputStr => setInputStr(inputStr)}
+          mode="outlined"
+          theme={DefaultTheme}
+        />
+        <HelperText type="error" visible={hasErrors()}>
+          Location number must be exactly 4 digits. No other characters are allowed.
+        </HelperText>
+        <Button
+          icon="save"
+          mode="contained"
+          color={colors.primary}
+          style={{marginBottom: 10}}
+          disabled={hasErrors()}
+          onPress={() => {
+            setLocationStr(inputStr);
+            _home();
+          }}
+        >Save</Button>
+        <Button
+          icon="cancel"
+          mode="outlined"
+          color={colors.primary}
+          onPress={_home}
+        >Cancel</Button>
+      </View>
+    </View>
+  }
+
+  function App(props: StateProps): ReactElement {
     switch (props.appState) {
       case BarcodeScannerAppState.INITIAL:
         return <LoadingMessage/>;
       case BarcodeScannerAppState.DEFAULT:
-        return <ScanButton onClicked={_scan}/>;
+        return <View style={styles.container}>
+          <ScanButton onClicked={_scan}/>
+        </View>;
       case BarcodeScannerAppState.PRINTED:
         return <SuccessMessage/>;
       case BarcodeScannerAppState.PRINTING:
@@ -77,10 +153,15 @@ export default function Main () {
       case BarcodeScannerAppState.SCANNED:
         return <View style={styles.container}>
           <BarCodeDisplay id={barCodeData} date={date} location={locationStr}/>
-          <ActionButtons></ActionButtons>
+          <ActionButtons/>
         </View>;
       case BarcodeScannerAppState.SCANNING:
-        return <Scanner onScanned={handleBarCodeScanned}/>;
+        return <Scanner
+          onScanned={handleBarCodeScanned}
+          onCancel={_home}
+        />;
+      case BarcodeScannerAppState.SETTINGS:
+        return <SettingsModal/>;
       default:
         return <ErrorMessage/>;
     }
@@ -88,13 +169,12 @@ export default function Main () {
 
   return (
     <PaperProvider theme={theme}>
-      <Appbar.Header>
-        <Appbar.Content title={appExpo.name} />
-        <Appbar.Action icon="home" onPress={_home} />
-        <Appbar.Action icon="camera" onPress={_scan} />
-        <Appbar.Action icon="printer" onPress={_print} />
+      <Appbar.Header dark={true}>
+        <Appbar.Content title={`${appExpo.description} #${locationStr}`}/>
+        <Appbar.Action icon="home" onPress={_home}/>
+        <Appbar.Action icon="settings" onPress={_settings}/>
       </Appbar.Header>
-      <SafeAreaView style={styles.surface}>
+      <SafeAreaView style={styles.safeAreaView}>
         <App appState={appState}/>
       </SafeAreaView>
     </PaperProvider>

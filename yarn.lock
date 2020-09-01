@@ -3846,6 +3846,16 @@ expo-barcode-scanner@~8.2.1:
     lodash "^4.6.0"
     prop-types "^15.6.0"
 
+expo-camera@~8.3.1:
+  version "8.3.1"
+  resolved "https://registry.yarnpkg.com/expo-camera/-/expo-camera-8.3.1.tgz#e17c080c4aafd71f66495c2b6dfc53dcd31b0368"
+  integrity sha512-weFanDVsJKAbm5g90zWIUD4zVrXKoQq7g2BTg4zy4p24YsGfXKYRH4ja0YRgr3Ci/abGaaRNZjsPMJiNskR+tA==
+  dependencies:
+    fbjs "1.0.0"
+    invariant "2.2.4"
+    lodash "^4.6.0"
+    prop-types "^15.6.0"
+
 expo-constants@~9.1.1:
   version "9.1.1"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-9.1.1.tgz#bca141ee3d4550e308798128f66c6d9c6a206ca1"
@@ -6970,6 +6980,13 @@ react-native-canvas@^0.1.37:
   integrity sha512-8W3YlS9WoxQeyK7/fjzlVIOcAqigE5pscn9xoU7rSYyzOJ69h5LjDlytjgZ6i7G7KqCRTarVIYJL8dAuER1OVQ==
   dependencies:
     ctx-polyfill "^1.1.4"
+
+react-native-easy-grid@^0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/react-native-easy-grid/-/react-native-easy-grid-0.2.2.tgz#f0be33620be1ebe2d2295918eb58b0a27e8272ab"
+  integrity sha512-MlYrNIldnEMKn6TVatQN1P64GoVlwGIuz+8ncdfJ0Wq/xtzUkQwlil8Uksyp7MhKfENE09MQnGNcba6Mx3oSAA==
+  dependencies:
+    lodash "^4.17.15"
 
 react-native-gesture-handler@~1.6.1:
   version "1.6.1"
