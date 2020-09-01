@@ -17,11 +17,20 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ajlouie.uvacovid19testingkiosk"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "sdkVersion": "38.0.0"
+    "sdkVersion": "38.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "android": {
+      "package": "com.ajlouie.uvacovid19testingkiosk"
+    }
   }
 }

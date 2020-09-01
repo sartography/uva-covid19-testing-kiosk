@@ -23,6 +23,6 @@ export interface ScannerProps extends ElementProps {
   onScanned: BarCodeScannedCallback;
 }
 
-export interface PrintingProps extends ElementProps {
+export interface PrintingProps extends BarCodeProps {
   onCancel: () => void;
 }
