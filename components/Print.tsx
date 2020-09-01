@@ -14,6 +14,26 @@ enum PrintStatus {
   DONE = 'DONE',
 }
 
+const _renderBarCodeRects = (props: PrintingProps): string => {
+  const dataStr = _propsToDataString(props);
+  const rects: string[] = [];
+
+  // TODO: set base width from label width in pixels
+  // 2 inches = 190 pixels
+  // for now, just guesstimate.
+  const baseWidth = 7;
+
+  for (let i = 0; i < dataStr.length; i++) {
+    // TODO: Convert dataStr to barcode rectangles with x, y, width, height
+    // barcodejs library has some useful stuff?
+    // Or maybe somehow use something in the guts of react-native-barcode-builder?
+    // For now, just put in some dummy x values and widths.
+    rects.push(`<rect width="${Math.floor(Math.random() * baseWidth)}" height="20" x="${baseWidth * i}" y="70" fill="black" />`);
+  }
+
+  return rects.join(' ')
+}
+
 const _propsToDataString = (props: BarCodeProps): string => {
   return `${props.id}-${props.date.getTime()}-${props.location}`;
 }
@@ -29,15 +49,52 @@ const _save = (props: PrintingProps): Promise<void> => {
 }
 
 const _print = (props: PrintingProps): Promise<void> => {
+  const dataStr = _propsToDataString(props);
   return Print.printAsync({
     html: `
       <style>
-        @page {
-          margin: 20px;
-          size: 2in 1.25in;
+        @media print {
+          @page {
+            size: 2in 1.25in;
+            margin: 0;
+          }
+          
+          html, body {
+            margin: 0;
+            padding: 0;
+          }
+
+          div.box {
+            width: 2in;
+            height: 1.25in;
+            color: #000;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+          }
+          
+          div.box p {
+            font-size: 10pt;
+            margin: 0;
+            padding: 0;
+          }
+          
+          svg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+          }
         }
       </style>
-      <h1 style="width: 100%; height: 100%; border: 4px solid black;">This is a test</h1>
+      <div class="box">
+        <p>ID#: ${props.id}</p>
+        <p>Date: ${props.date.toLocaleDateString()} ${props.date.toLocaleTimeString()}</p>
+        <p>Loc#: ${props.location}</p>
+        <svg width="190" height="90" id="barCode">
+            ${_renderBarCodeRects(props)}
+        </svg>
+        <p>${dataStr}</p>
+      </div>
     `,
   });
 }
