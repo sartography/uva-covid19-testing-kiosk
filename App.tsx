@@ -1,16 +1,24 @@
+// @refresh reset
+import AsyncStorage from '@react-native-community/async-storage';
+import {format, parse} from 'date-fns';
 import {BarCodeEvent, BarCodeScanner, PermissionResponse} from 'expo-barcode-scanner';
-import React, {ReactElement, useEffect, useState} from 'react';
-import {AppRegistry, SafeAreaView, View} from 'react-native';
+// @ts-ignore
+import * as firebase from 'firebase';
+import 'firebase/firestore';
+import React, {ReactElement, useCallback, useEffect, useState} from 'react';
+import {AppRegistry, SafeAreaView, View, YellowBox} from 'react-native';
 import {
   Appbar,
-  Button, DarkTheme,
+  Button,
   DefaultTheme,
   HelperText,
   Provider as PaperProvider,
-  Snackbar, Subheading,
+  Snackbar,
+  Subheading,
   TextInput,
   Title
 } from 'react-native-paper';
+import QRCode from 'react-native-qrcode-svg';
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
 import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
@@ -18,6 +26,29 @@ import {IdNumberInput, InputIdButton, ScanButton, Scanner} from './components/Sc
 import {colors, styles} from './components/Styles';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
 import {ElementProps, StateProps} from './models/ElementProps';
+import {Sample} from './models/Sample';
+
+const firebaseConfig = {
+  apiKey: 'api_key_goes_here',
+  authDomain: "uva-covid19-testing-kiosk.firebaseapp.com",
+  databaseURL: "https://uva-covid19-testing-kiosk.firebaseio.com",
+  projectId: 'project_id_goes_here',
+  storageBucket: "uva-covid19-testing-kiosk.appspot.com",
+  messagingSenderId: 'sender_id_goes_here',
+  appId: 'app_id_goes_here'
+};
+
+// Initialize Firebase if not already initialized.
+if (firebase.apps.length === 0) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+YellowBox.ignoreWarnings([
+  'Setting a timer for a long period of time',  // Ignore Firebase timer warnings
+]);
+
+const db = firebase.firestore();
+const samplesCollection = db.collection('samples');
 
 const theme = {
   ...DefaultTheme,
@@ -26,10 +57,13 @@ const theme = {
 
 export default function Main() {
   const [appState, setAppState] = useState<BarcodeScannerAppState>(BarcodeScannerAppState.INITIAL);
-  const [barCodeData, setBarCodeData] = useState<string>('');
-  const [date, setDate] = useState<Date>(new Date());
+  const [sampleId, setSampleId] = useState<string>('');
+  const [barCodeId, setBarCodeId] = useState<string>('');
+  const [sampleDate, setSampleDate] = useState<Date>(new Date());
   const [locationStr, setLocationStr] = useState<string>('4321');
+  const [svgQrCode, setSvgQrCode] = useState<any>();
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [samples, setSamples] = useState<Sample[]>([]);
 
   useEffect(() => {
     BarCodeScanner.requestPermissionsAsync().then((value: PermissionResponse) => {
@@ -39,9 +73,26 @@ export default function Main() {
         setAppState(BarcodeScannerAppState.ERROR);
       }
     });
+
+    const unsubscribe = samplesCollection.onSnapshot(querySnapshot => {
+      // Transform and sort the data returned from Firebase
+      const samplesFirestore = querySnapshot
+        .docChanges()
+        .filter(({type}) => type === 'added')
+        .map(({doc}) => {
+          const sample = doc.data();
+          return {...sample, createdAt: sample.createdAt.toDate()} as Sample;
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      appendSamples(samplesFirestore);
+    });
+
+    return () => unsubscribe()
   }, []);
 
-  const _doNothing = () => {};
+  const _doNothing = () => {
+  };
   const _scan = () => {
     setErrorMessage('');
     setAppState(BarcodeScannerAppState.SCANNING);
@@ -51,6 +102,7 @@ export default function Main() {
     setAppState(BarcodeScannerAppState.INPUT);
   };
   const _print = () => setAppState(BarcodeScannerAppState.PRINTING);
+  const _printed = () => setAppState(BarcodeScannerAppState.PRINTED);
   const _home = () => setAppState(BarcodeScannerAppState.DEFAULT);
   const _settings = () => setAppState(BarcodeScannerAppState.SETTINGS);
 
@@ -62,14 +114,30 @@ export default function Main() {
     const pattern = /^[\d]{14}$|^[\d]{9}$/;
     if (pattern.test(barCodeString)) {
       const cardId = e.data.slice(0, 9);
-      setBarCodeData(cardId);
-      setDate(new Date());
+      setBarCodeId(cardId);
+      setSampleDate(new Date());
       setAppState(BarcodeScannerAppState.SCANNED);
+      setSampleId([barCodeId, format(sampleDate, 'yyyyMMddHHmm'), locationStr].join('-'));
+
+      console.log('sampleId', sampleId);
+      new QRCode({value: sampleId, ecl: 'H', getRef: c => {
+          setSvgQrCode(c);
+          console.log('svgQrCode', svgQrCode);
+        }});
     } else {
       setErrorMessage(`The barcode data "${e.data}" is not from a valid ID card.`);
       setAppState(BarcodeScannerAppState.ERROR);
     }
   };
+
+  const appendSamples = useCallback((newSamples) => {
+    setSamples((previousSamples) => previousSamples.concat(newSamples));
+  }, [samples]);
+
+  const sendDataToFirebase = async (newSamples: Sample[]) => {
+    const writes = newSamples.map(s => samplesCollection.doc(s.id).set(s));
+    await Promise.all(writes);
+  }
 
   function ErrorMessage(props: ElementProps): ReactElement {
     return <View style={styles.fullScreen}>
@@ -114,7 +182,8 @@ export default function Main() {
       <Title style={styles.headingInverse}>Settings</Title>
       <View style={{marginBottom: 10}}>
         <Subheading style={{color: DefaultTheme.colors.text, marginBottom: 60}}>
-          Please do NOT change this unless you know what you are doing. Entering an incorrect location number may prevent patients from getting accurate info about their test results.
+          Please do NOT change this unless you know what you are doing. Entering an incorrect location number may
+          prevent patients from getting accurate info about their test results.
         </Subheading>
         <TextInput
           label="Location #"
@@ -157,16 +226,45 @@ export default function Main() {
           <InputIdButton onClicked={_inputIdNumber}/>
         </View>;
       case BarcodeScannerAppState.PRINTED:
+        // Upload any changes to Firebase
+        AsyncStorage.getAllKeys().then(keys => {
+          const newSamples = keys
+            .filter(s => /^[\d]{9}-[\d]{12}-[\d]{4}$/.test(s))
+            .map(s => {
+              const propsArray = s.split('-');
+              return {
+                id: s,
+                barcodeId: propsArray[0],
+                createdAt: parse(propsArray[1], 'yyyyMMddHHmm', new Date()),
+                locationId: propsArray[2],
+              } as Sample;
+            });
+          sendDataToFirebase(newSamples);
+        });
+
+        _home();
+
         return <SuccessMessage/>;
       case BarcodeScannerAppState.PRINTING:
-        return <PrintingMessage
-          onCancel={_home}
-          id={barCodeData}
-          date={date} location={locationStr}
-        />;
+        return <View style={styles.container}>
+          <PrintingMessage
+            onCancel={_printed}
+            id={sampleId}
+            barCodeId={barCodeId}
+            date={sampleDate}
+            location={locationStr}
+            svg={svgQrCode}
+          />
+        </View>;
       case BarcodeScannerAppState.SCANNED:
         return <View style={styles.container}>
-          <BarCodeDisplay id={barCodeData} date={date} location={locationStr}/>
+          <BarCodeDisplay
+            id={sampleId}
+            barCodeId={barCodeId}
+            date={sampleDate}
+            location={locationStr}
+            svg={svgQrCode}
+          />
           <ActionButtons/>
         </View>;
       case BarcodeScannerAppState.SCANNING:

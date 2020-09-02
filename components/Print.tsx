@@ -1,9 +1,9 @@
 import React, {ReactElement, useEffect, useState} from 'react';
 import {Text, View} from 'react-native';
-// @ts-ignore
-import Barcode from 'react-native-barcode-builder';
 import {Button, Title} from 'react-native-paper';
+import QRCode from 'react-native-qrcode-svg';
 import {BarCodeProps, ButtonProps, PrintingProps} from '../models/ElementProps';
+import {Sample} from '../models/Sample';
 import {colors, styles} from './Styles';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Print from 'expo-print';
@@ -15,44 +15,18 @@ enum PrintStatus {
   DONE = 'DONE',
 }
 
-const _renderBarCodeRects = (props: PrintingProps): string => {
-  const dataStr = _propsToDataString(props);
-  const rects: string[] = [];
-
-  // TODO: set base width from label width in pixels
-  // 2 inches = 190 pixels
-  // for now, just guesstimate.
-  const baseWidth = 7;
-
-  for (let i = 0; i < dataStr.length; i++) {
-    // TODO: Convert dataStr to barcode rectangles with x, y, width, height
-    // barcodejs library has some useful stuff?
-    // Or maybe somehow use something in the guts of react-native-barcode-builder?
-    // For now, just put in some dummy x values and widths.
-    rects.push(`<rect width="${Math.floor(Math.random() * baseWidth)}" height="20" x="${baseWidth * i}" y="70" fill="black" />`);
-  }
-
-  return rects.join(' ')
-}
-
-const _propsToDataString = (props: BarCodeProps): string => {
-  return props.id + format(props.date, 'yyyymmdd') + props.location;
-}
-
 const _save = (props: PrintingProps): Promise<void> => {
-  const storageKey = _propsToDataString(props);
-  const storageVal = {
+  const storageVal: Sample = {
     id: props.id,
-    date: props.date,
-    location: props.location,
+    barcodeId: props.barCodeId,
+    createdAt: props.date,
+    locationId: props.location,
   };
-  console.log('storageKey', storageKey);
-  console.log('storageVal', storageVal);
-  return AsyncStorage.setItem(storageKey, JSON.stringify(storageVal));
+  return AsyncStorage.setItem(props.id, JSON.stringify(storageVal));
 }
 
 const _print = (props: PrintingProps): Promise<void> => {
-  const dataStr = _propsToDataString(props);
+  console.log('props.svg', props.svg);
   return Print.printAsync({
     html: `
       <style>
@@ -90,13 +64,11 @@ const _print = (props: PrintingProps): Promise<void> => {
         }
       </style>
       <div class="box">
-        <p>ID#: ${props.id}</p>
+        <p>ID#: ${props.barCodeId}</p>
         <p>Date: ${props.date.toLocaleDateString()} ${props.date.toLocaleTimeString()}</p>
         <p>Loc#: ${props.location}</p>
-        <svg width="190" height="90" id="barCode">
-            ${_renderBarCodeRects(props)}
-        </svg>
-        <p>${dataStr}</p>
+        ${props.svg}
+        <p>${props.id}</p>
       </div>
     `,
   });
@@ -142,11 +114,15 @@ export const PrintingMessage = (props: PrintingProps): ReactElement => {
     }
   }
 
-
   return <View style={styles.container}>
     <View style={styles.preview}>
-      <BarCodeDisplay id={props.id} date={props.date} location={props.location} />
-      <BarCodeDisplay id={props.id} date={props.date} location={props.location} />
+      <BarCodeDisplay
+        id={props.id}
+        barCodeId={props.barCodeId}
+        date={props.date}
+        location={props.location}
+        svg={props.svg}
+      />
     </View>
     <View style={styles.container}>
       <Title style={styles.heading}>{statusStr}</Title>
@@ -165,11 +141,11 @@ export const PrintingMessage = (props: PrintingProps): ReactElement => {
 
 
 export const BarCodeDisplay = (props: BarCodeProps): ReactElement => {
-  const data = _propsToDataString(props);
+  console.log('BarCodeDisplay props.svg', props.svg);
   return <View style={styles.printPreview}>
     <Text style={styles.label}>ID#: {props.id}</Text>
     <Text style={styles.label}>Date: {props.date.toLocaleDateString()}, {props.date.toLocaleTimeString()}</Text>
     <Text style={styles.label}>Location {props.location}</Text>
-    <Barcode width={1.1} height={40} text={data} value={data} format={'CODE128'}/>
+    <QRCode value={props.id} />
   </View>;
 }
