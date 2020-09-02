@@ -7,6 +7,7 @@ import {BarCodeProps, ButtonProps, PrintingProps} from '../models/ElementProps';
 import {colors, styles} from './Styles';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Print from 'expo-print';
+import {format} from 'date-fns'
 
 enum PrintStatus {
   SAVING = 'SAVING',
@@ -35,7 +36,7 @@ const _renderBarCodeRects = (props: PrintingProps): string => {
 }
 
 const _propsToDataString = (props: BarCodeProps): string => {
-  return `${props.id}-${props.date.getTime()}-${props.location}`;
+  return props.id + format(props.date, 'yyyymmdd') + props.location;
 }
 
 const _save = (props: PrintingProps): Promise<void> => {
@@ -45,6 +46,8 @@ const _save = (props: PrintingProps): Promise<void> => {
     date: props.date,
     location: props.location,
   };
+  console.log('storageKey', storageKey);
+  console.log('storageVal', storageVal);
   return AsyncStorage.setItem(storageKey, JSON.stringify(storageVal));
 }
 

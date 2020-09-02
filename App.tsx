@@ -14,7 +14,7 @@ import {
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
 import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
-import {ScanButton, Scanner} from './components/Scan';
+import {IdNumberInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
 import {colors, styles} from './components/Styles';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
 import {ElementProps, StateProps} from './models/ElementProps';
@@ -29,6 +29,7 @@ export default function Main() {
   const [barCodeData, setBarCodeData] = useState<string>('');
   const [date, setDate] = useState<Date>(new Date());
   const [locationStr, setLocationStr] = useState<string>('4321');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     BarCodeScanner.requestPermissionsAsync().then((value: PermissionResponse) => {
@@ -41,20 +42,31 @@ export default function Main() {
   }, []);
 
   const _doNothing = () => {};
-  const _scan = () => setAppState(BarcodeScannerAppState.SCANNING);
+  const _scan = () => {
+    setErrorMessage('');
+    setAppState(BarcodeScannerAppState.SCANNING);
+  };
+  const _inputIdNumber = () => {
+    setErrorMessage('');
+    setAppState(BarcodeScannerAppState.INPUT);
+  };
   const _print = () => setAppState(BarcodeScannerAppState.PRINTING);
   const _home = () => setAppState(BarcodeScannerAppState.DEFAULT);
   const _settings = () => setAppState(BarcodeScannerAppState.SETTINGS);
 
   const handleBarCodeScanned = (e: BarCodeEvent) => {
     // Make sure the data is the right length.
+    // Scanned barcodes will be exactly 14 digits long.
+    // Manually-entered ID numbers will be exactly 9 digits long.
     const barCodeString = e.data;
-    const pattern = /^[\d]{14}$/;
+    const pattern = /^[\d]{14}$|^[\d]{9}$/;
     if (pattern.test(barCodeString)) {
-      setBarCodeData(e.data);
+      const cardId = e.data.slice(0, 9);
+      setBarCodeData(cardId);
       setDate(new Date());
       setAppState(BarcodeScannerAppState.SCANNED);
     } else {
+      setErrorMessage(`The barcode data "${e.data}" is not from a valid ID card.`);
       setAppState(BarcodeScannerAppState.ERROR);
     }
   };
@@ -63,12 +75,13 @@ export default function Main() {
     return <View style={styles.fullScreen}>
       <View style={styles.container}>
         <ScanButton onClicked={_scan}/>
+        <InputIdButton onClicked={_inputIdNumber}/>
       </View>
       <Snackbar
         visible={appState === BarcodeScannerAppState.ERROR}
         onDismiss={_doNothing}
         style={styles.error}
-      >Something went wrong. Try again.</Snackbar>
+      >{errorMessage === '' ? 'Something went wrong. Try again.' : errorMessage}</Snackbar>
     </View>
   }
 
@@ -90,7 +103,7 @@ export default function Main() {
     </View>
   }
 
-  function SettingsModal(props: ElementProps): ReactElement {
+  function SettingsScreen(props: ElementProps): ReactElement {
     const [inputStr, setInputStr] = useState<string>(locationStr);
     const pattern = /^[\d]{4}$/;
     const hasErrors = () => {
@@ -141,6 +154,7 @@ export default function Main() {
       case BarcodeScannerAppState.DEFAULT:
         return <View style={styles.container}>
           <ScanButton onClicked={_scan}/>
+          <InputIdButton onClicked={_inputIdNumber}/>
         </View>;
       case BarcodeScannerAppState.PRINTED:
         return <SuccessMessage/>;
@@ -160,8 +174,13 @@ export default function Main() {
           onScanned={handleBarCodeScanned}
           onCancel={_home}
         />;
+      case BarcodeScannerAppState.INPUT:
+        return <IdNumberInput
+          onScanned={handleBarCodeScanned}
+          onCancel={_home}
+        />;
       case BarcodeScannerAppState.SETTINGS:
-        return <SettingsModal/>;
+        return <SettingsScreen/>;
       default:
         return <ErrorMessage/>;
     }

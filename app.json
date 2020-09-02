@@ -19,7 +19,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ajlouie.uvacovid19testingkiosk"
+      "bundleIdentifier": "com.sartography.uvacovid19testingkiosk"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,7 +31,7 @@
       "web"
     ],
     "android": {
-      "package": "com.ajlouie.uvacovid19testingkiosk"
+      "package": "com.sartography.uvacovid19testingkiosk"
     }
   }
 }
