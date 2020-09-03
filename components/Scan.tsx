@@ -1,6 +1,6 @@
-import {BarCodeEvent, BarCodeScanner} from 'expo-barcode-scanner';
+import {BarCodeScanner} from 'expo-barcode-scanner';
 import React, {ReactElement, useState} from 'react';
-import {View, Text} from 'react-native';
+import {Text, View} from 'react-native';
 import {Button, DefaultTheme, HelperText, Subheading, TextInput, Title} from 'react-native-paper';
 import {ButtonProps, ScannerProps} from '../models/ElementProps';
 import {colors, styles} from './Styles';
@@ -26,7 +26,7 @@ export const Scanner = (props: ScannerProps): ReactElement => {
         />
       </View>
       <View style={styles.centerMiddle}>
-        <View style={styles.captureBox} />
+        <View style={styles.captureBox}/>
       </View>
       <Text style={styles.subtitle}>
         Hold your ID card up, with the barcode facing the camera. Keep the card in the green box.
@@ -50,7 +50,7 @@ export const Scanner = (props: ScannerProps): ReactElement => {
     </View>;
   }
 
-  return <ScanCamera key={componentKey} />;
+  return <ScanCamera key={componentKey}/>;
 };
 
 export const ScanButton = (props: ButtonProps): ReactElement => {
@@ -81,7 +81,6 @@ export const IdNumberInput = (props: ScannerProps): ReactElement => {
   };
 
   const onSubmit = () => {
-    console.log('onSubmit inputStr =', inputStr);
     props.onScanned({type: '', data: inputStr});
   }
 
@@ -89,7 +88,8 @@ export const IdNumberInput = (props: ScannerProps): ReactElement => {
     <Title style={styles.headingInverse}>Settings</Title>
     <View style={{marginBottom: 10}}>
       <Subheading style={{color: DefaultTheme.colors.text, marginBottom: 60}}>
-        Please double check that you have entered the number correctly. Entering an incorrect ID number will prevent patients from receiving their test results.
+        Please double check that you have entered the number correctly. Entering an incorrect ID number will prevent
+        patients from receiving their test results.
       </Subheading>
       <TextInput
         label="ID #"

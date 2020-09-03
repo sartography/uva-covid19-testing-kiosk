@@ -14,7 +14,6 @@ export interface BarCodeProps extends ElementProps {
   barCodeId: string;
   date: Date;
   location: string;
-  svg: any;
 }
 
 export interface ButtonProps extends ElementProps {
