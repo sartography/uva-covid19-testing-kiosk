@@ -1,6 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {DefaultTheme, DarkTheme} from 'react-native-paper';
-
+import {DarkTheme, DefaultTheme} from 'react-native-paper';
 
 export const colors = {
   ...DarkTheme.colors,
@@ -42,7 +41,7 @@ export const styles = StyleSheet.create({
     height: 213,
     width: 338,
     borderRadius: 20,
- },
+  },
   centerMiddle: {
     alignItems: 'center',
     justifyContent: 'center',

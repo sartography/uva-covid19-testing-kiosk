@@ -18,7 +18,6 @@ import {
   TextInput,
   Title
 } from 'react-native-paper';
-import QRCode from 'react-native-qrcode-svg';
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
 import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
@@ -61,7 +60,6 @@ export default function Main() {
   const [barCodeId, setBarCodeId] = useState<string>('');
   const [sampleDate, setSampleDate] = useState<Date>(new Date());
   const [locationStr, setLocationStr] = useState<string>('4321');
-  const [svgQrCode, setSvgQrCode] = useState<any>();
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [samples, setSamples] = useState<Sample[]>([]);
 
@@ -114,16 +112,13 @@ export default function Main() {
     const pattern = /^[\d]{14}$|^[\d]{9}$/;
     if (pattern.test(barCodeString)) {
       const cardId = e.data.slice(0, 9);
-      setBarCodeId(cardId);
-      setSampleDate(new Date());
-      setAppState(BarcodeScannerAppState.SCANNED);
-      setSampleId([barCodeId, format(sampleDate, 'yyyyMMddHHmm'), locationStr].join('-'));
+      const newSampleDate = new Date();
+      const newSampleId = [cardId, format(newSampleDate, 'yyyyMMddHHmm'), locationStr].join('-');
 
-      console.log('sampleId', sampleId);
-      new QRCode({value: sampleId, ecl: 'H', getRef: c => {
-          setSvgQrCode(c);
-          console.log('svgQrCode', svgQrCode);
-        }});
+      setSampleId(newSampleId);
+      setBarCodeId(cardId);
+      setSampleDate(newSampleDate);
+      setAppState(BarcodeScannerAppState.SCANNED);
     } else {
       setErrorMessage(`The barcode data "${e.data}" is not from a valid ID card.`);
       setAppState(BarcodeScannerAppState.ERROR);
@@ -196,7 +191,7 @@ export default function Main() {
           Location number must be exactly 4 digits. No other characters are allowed.
         </HelperText>
         <Button
-          icon="save"
+          icon="content-save"
           mode="contained"
           color={colors.primary}
           style={{marginBottom: 10}}
@@ -253,7 +248,6 @@ export default function Main() {
             barCodeId={barCodeId}
             date={sampleDate}
             location={locationStr}
-            svg={svgQrCode}
           />
         </View>;
       case BarcodeScannerAppState.SCANNED:
@@ -263,7 +257,6 @@ export default function Main() {
             barCodeId={barCodeId}
             date={sampleDate}
             location={locationStr}
-            svg={svgQrCode}
           />
           <ActionButtons/>
         </View>;
