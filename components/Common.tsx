@@ -5,7 +5,7 @@ import {colors, styles} from './Styles';
 
 export const CancelButton = (props: ButtonProps): ReactElement => {
   return <Button
-    icon="camera"
+    icon="cancel"
     color={colors.text}
     onPress={props.onClicked}
     style={styles.btnLg}

@@ -11,6 +11,7 @@ export interface StateProps extends ElementProps {
 
 export interface BarCodeProps extends ElementProps {
   id: string;
+  barCodeId: string;
   date: Date;
   location: string;
 }
@@ -21,6 +22,7 @@ export interface ButtonProps extends ElementProps {
 
 export interface ScannerProps extends ElementProps {
   onScanned: BarCodeScannedCallback;
+  onCancel: () => void;
 }
 
 export interface PrintingProps extends BarCodeProps {

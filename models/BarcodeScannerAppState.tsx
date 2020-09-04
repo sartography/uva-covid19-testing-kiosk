@@ -3,7 +3,9 @@ export enum BarcodeScannerAppState {
   DEFAULT = 'DEFAULT',
   SCANNING = 'SCANNING',
   SCANNED = 'SCANNED',
+  INPUT = 'INPUT',
   PRINTING = 'PRINTING',
   PRINTED = 'PRINTED',
   ERROR = 'ERROR',
+  SETTINGS = 'SETTINGS',
 }
