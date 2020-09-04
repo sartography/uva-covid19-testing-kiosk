@@ -6,17 +6,17 @@ import {BarCodeEvent, BarCodeScanner, PermissionResponse} from 'expo-barcode-sca
 import * as firebase from 'firebase';
 import 'firebase/firestore';
 import React, {ReactElement, useCallback, useEffect, useState} from 'react';
-import {AppRegistry, SafeAreaView, View, YellowBox} from 'react-native';
+import {AppRegistry, SafeAreaView, Text, View, YellowBox} from 'react-native';
 import {
   Appbar,
   Button,
   DefaultTheme,
   HelperText,
-  Provider as PaperProvider,
+  Provider as PaperProvider, RadioButton,
   Snackbar,
   Subheading,
   TextInput,
-  Title
+  Title,
 } from 'react-native-paper';
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
@@ -24,7 +24,7 @@ import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
 import {IdNumberInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
 import {colors, styles} from './components/Styles';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
-import {ElementProps, StateProps} from './models/ElementProps';
+import {CameraType, ElementProps, StateProps} from './models/ElementProps';
 import {Sample} from './models/Sample';
 
 const firebaseConfig = {
@@ -44,6 +44,7 @@ if (firebase.apps.length === 0) {
 
 YellowBox.ignoreWarnings([
   'Setting a timer for a long period of time',  // Ignore Firebase timer warnings
+  'Remote debugger is in a background tab',  // Ignore Firebase timer warnings
 ]);
 
 const db = firebase.firestore();
@@ -62,6 +63,7 @@ export default function Main() {
   const [locationStr, setLocationStr] = useState<string>('4321');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [samples, setSamples] = useState<Sample[]>([]);
+  const [cameraType, setCameraType] = useState<CameraType>('back');
 
   useEffect(() => {
     BarCodeScanner.requestPermissionsAsync().then((value: PermissionResponse) => {
@@ -110,6 +112,7 @@ export default function Main() {
     // Manually-entered ID numbers will be exactly 9 digits long.
     const barCodeString = e.data;
     const pattern = /^[\d]{14}$|^[\d]{9}$/;
+    console.log('barCodeString', barCodeString);
     if (pattern.test(barCodeString)) {
       const cardId = e.data.slice(0, 9);
       const newSampleDate = new Date();
@@ -168,13 +171,38 @@ export default function Main() {
 
   function SettingsScreen(props: ElementProps): ReactElement {
     const [inputStr, setInputStr] = useState<string>(locationStr);
+
     const pattern = /^[\d]{4}$/;
     const hasErrors = () => {
       return !pattern.test(inputStr);
     };
 
     return <View style={styles.settings}>
-      <Title style={styles.headingInverse}>Settings</Title>
+      <View style={{marginBottom: 10}}>
+        <Subheading style={{color: DefaultTheme.colors.text}}>Which camera to scan bar codes with?</Subheading>
+        <RadioButton.Group
+          onValueChange={value => setCameraType(value as CameraType)}
+          value={cameraType as string}
+        >
+          <View style={styles.row}>
+            <Text>Front</Text>
+            <RadioButton
+              value="front"
+              color={colors.primary}
+              uncheckedColor={colors.accent}
+            />
+          </View>
+          <View style={styles.row}>
+            <Text>Back</Text>
+            <RadioButton
+              value="back"
+              color={colors.primary}
+              uncheckedColor={colors.accent}
+            />
+          </View>
+        </RadioButton.Group>
+      </View>
+
       <View style={{marginBottom: 10}}>
         <Subheading style={{color: DefaultTheme.colors.text, marginBottom: 60}}>
           Please do NOT change this unless you know what you are doing. Entering an incorrect location number may
@@ -264,11 +292,13 @@ export default function Main() {
         return <Scanner
           onScanned={handleBarCodeScanned}
           onCancel={_home}
+          cameraType={cameraType}
         />;
       case BarcodeScannerAppState.INPUT:
         return <IdNumberInput
           onScanned={handleBarCodeScanned}
           onCancel={_home}
+          cameraType={undefined}
         />;
       case BarcodeScannerAppState.SETTINGS:
         return <SettingsScreen/>;

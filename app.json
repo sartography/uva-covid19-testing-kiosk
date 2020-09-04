@@ -4,7 +4,7 @@
     "name": "uva-covid19-testing-kiosk",
     "slug": "uva-covid19-testing-kiosk",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
@@ -19,7 +19,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sartography.uvacovid19testingkiosk"
+      "bundleIdentifier": "com.sartography.uvacovid19testingkiosk",
+      "requireFullScreen": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
