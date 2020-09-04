@@ -1,5 +1,6 @@
 {
   "expo": {
+    "description": "UVA Testing Kiosk",
     "name": "uva-covid19-testing-kiosk",
     "slug": "uva-covid19-testing-kiosk",
     "version": "1.0.0",
@@ -18,7 +19,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ajlouie.uvacovid19testingkiosk"
+      "bundleIdentifier": "com.sartography.uvacovid19testingkiosk"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,7 +31,7 @@
       "web"
     ],
     "android": {
-      "package": "com.ajlouie.uvacovid19testingkiosk"
+      "package": "com.sartography.uvacovid19testingkiosk"
     }
   }
 }
