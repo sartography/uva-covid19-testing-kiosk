@@ -6,25 +6,18 @@ import {BarCodeEvent, BarCodeScanner, PermissionResponse} from 'expo-barcode-sca
 import * as firebase from 'firebase';
 import 'firebase/firestore';
 import React, {ReactElement, useCallback, useEffect, useState} from 'react';
-import {AppRegistry, SafeAreaView, Text, View, YellowBox} from 'react-native';
-import {
-  Appbar,
-  Button,
-  DefaultTheme,
-  HelperText,
-  Provider as PaperProvider, RadioButton,
-  Snackbar,
-  Subheading,
-  TextInput,
-  Title,
-} from 'react-native-paper';
+import {AppRegistry, SafeAreaView, View, YellowBox} from 'react-native';
+import {Appbar, DefaultTheme, Provider as PaperProvider, Snackbar, Title,} from 'react-native-paper';
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
+import {InputLineCountButton, InputLineCountScreen} from './components/LineCount';
 import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
 import {IdNumberInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
+import {SettingsScreen} from './components/Settings';
 import {colors, styles} from './components/Styles';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
 import {CameraType, ElementProps, StateProps} from './models/ElementProps';
+import {LineCount} from './models/LineCount';
 import {Sample} from './models/Sample';
 
 const firebaseConfig = {
@@ -49,6 +42,8 @@ YellowBox.ignoreWarnings([
 
 const db = firebase.firestore();
 const samplesCollection = db.collection('samples');
+const countsCollection = db.collection('counts');
+const dateFormat = 'yyyyMMddHHmm';
 
 const theme = {
   ...DefaultTheme,
@@ -63,6 +58,7 @@ export default function Main() {
   const [locationStr, setLocationStr] = useState<string>('4321');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [samples, setSamples] = useState<Sample[]>([]);
+  const [lineCounts, setLineCounts] = useState<LineCount[]>([]);
   const [cameraType, setCameraType] = useState<CameraType>('back');
 
   useEffect(() => {
@@ -74,7 +70,7 @@ export default function Main() {
       }
     });
 
-    const unsubscribe = samplesCollection.onSnapshot(querySnapshot => {
+    const unsubscribeSamples = samplesCollection.onSnapshot(querySnapshot => {
       // Transform and sort the data returned from Firebase
       const samplesFirestore = querySnapshot
         .docChanges()
@@ -88,7 +84,21 @@ export default function Main() {
       appendSamples(samplesFirestore);
     });
 
-    return () => unsubscribe()
+    const unsubscribeCounts = countsCollection.onSnapshot(querySnapshot => {
+      // Transform and sort the data returned from Firebase
+      const lineCountsFirestore = querySnapshot
+        .docChanges()
+        .filter(({type}) => type === 'added')
+        .map(({doc}) => {
+          const lineCount = doc.data();
+          return {...lineCount, createdAt: lineCount.createdAt.toDate()} as LineCount;
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      appendLineCounts(lineCountsFirestore);
+    });
+
+    return () => unsubscribeSamples()
   }, []);
 
   const _doNothing = () => {
@@ -100,6 +110,10 @@ export default function Main() {
   const _inputIdNumber = () => {
     setErrorMessage('');
     setAppState(BarcodeScannerAppState.INPUT);
+  };
+  const _inputLineCount = () => {
+    setErrorMessage('');
+    setAppState(BarcodeScannerAppState.COUNT);
   };
   const _print = () => setAppState(BarcodeScannerAppState.PRINTING);
   const _printed = () => setAppState(BarcodeScannerAppState.PRINTED);
@@ -116,7 +130,7 @@ export default function Main() {
     if (pattern.test(barCodeString)) {
       const cardId = e.data.slice(0, 9);
       const newSampleDate = new Date();
-      const newSampleId = [cardId, format(newSampleDate, 'yyyyMMddHHmm'), locationStr].join('-');
+      const newSampleId = [cardId, format(newSampleDate, dateFormat), locationStr].join('-');
 
       setSampleId(newSampleId);
       setBarCodeId(cardId);
@@ -128,16 +142,32 @@ export default function Main() {
     }
   };
 
+  const handleLineCountSubmitted = (newCount: number) => {
+    const now = new Date();
+    const newId = `${locationStr}-${format(now, dateFormat)}`;
+    const newData: LineCount = {
+      id: newId,
+      lineCount: newCount,
+      locationId: locationStr,
+      createdAt: now,
+    };
+    sendDataToFirebase([newData], countsCollection);
+  }
+
   const appendSamples = useCallback((newSamples) => {
     setSamples((previousSamples) => previousSamples.concat(newSamples));
   }, [samples]);
 
-  const sendDataToFirebase = async (newSamples: Sample[]) => {
-    const writes = newSamples.map(s => samplesCollection.doc(s.id).set(s));
+  const appendLineCounts = useCallback((newLineCounts) => {
+    setLineCounts((previousLineCounts) => previousLineCounts.concat(newLineCounts));
+  }, [lineCounts]);
+
+  const sendDataToFirebase = async (newData: Array<Sample|LineCount>, collection: firebase.firestore.CollectionReference) => {
+    const writes = newData.map((s: Sample|LineCount) => collection.doc(s.id).set(s));
     await Promise.all(writes);
   }
 
-  function ErrorMessage(props: ElementProps): ReactElement {
+  const ErrorMessage = (props: ElementProps): ReactElement => {
     return <View style={styles.fullScreen}>
       <View style={styles.container}>
         <ScanButton onClicked={_scan}/>
@@ -151,91 +181,21 @@ export default function Main() {
     </View>
   }
 
-  function LoadingMessage(props: ElementProps): ReactElement {
+  const LoadingMessage = (props: ElementProps): ReactElement => {
     return <Snackbar
       visible={appState === BarcodeScannerAppState.INITIAL}
       onDismiss={_doNothing}
     >Loading...</Snackbar>;
   }
 
-  function SuccessMessage(props: ElementProps): ReactElement {
+  const SuccessMessage = (props: ElementProps): ReactElement => {
     return <Title>Your barcode label has printed successfully.</Title>;
   }
 
-  function ActionButtons(props: ElementProps): ReactElement {
+  const ActionButtons = (props: ElementProps): ReactElement => {
     return <View>
       <PrintButton onClicked={_print}/>
       <CancelButton onClicked={_home}/>
-    </View>
-  }
-
-  function SettingsScreen(props: ElementProps): ReactElement {
-    const [inputStr, setInputStr] = useState<string>(locationStr);
-
-    const pattern = /^[\d]{4}$/;
-    const hasErrors = () => {
-      return !pattern.test(inputStr);
-    };
-
-    return <View style={styles.settings}>
-      <View style={{marginBottom: 10}}>
-        <Subheading style={{color: DefaultTheme.colors.text}}>Which camera to scan bar codes with?</Subheading>
-        <RadioButton.Group
-          onValueChange={value => setCameraType(value as CameraType)}
-          value={cameraType as string}
-        >
-          <View style={styles.row}>
-            <Text>Front</Text>
-            <RadioButton
-              value="front"
-              color={colors.primary}
-              uncheckedColor={colors.accent}
-            />
-          </View>
-          <View style={styles.row}>
-            <Text>Back</Text>
-            <RadioButton
-              value="back"
-              color={colors.primary}
-              uncheckedColor={colors.accent}
-            />
-          </View>
-        </RadioButton.Group>
-      </View>
-
-      <View style={{marginBottom: 10}}>
-        <Subheading style={{color: DefaultTheme.colors.text, marginBottom: 60}}>
-          Please do NOT change this unless you know what you are doing. Entering an incorrect location number may
-          prevent patients from getting accurate info about their test results.
-        </Subheading>
-        <TextInput
-          label="Location #"
-          value={inputStr}
-          onChangeText={inputStr => setInputStr(inputStr)}
-          mode="outlined"
-          theme={DefaultTheme}
-        />
-        <HelperText type="error" visible={hasErrors()}>
-          Location number must be exactly 4 digits. No other characters are allowed.
-        </HelperText>
-        <Button
-          icon="content-save"
-          mode="contained"
-          color={colors.primary}
-          style={{marginBottom: 10}}
-          disabled={hasErrors()}
-          onPress={() => {
-            setLocationStr(inputStr);
-            _home();
-          }}
-        >Save</Button>
-        <Button
-          icon="cancel"
-          mode="outlined"
-          color={colors.primary}
-          onPress={_home}
-        >Cancel</Button>
-      </View>
     </View>
   }
 
@@ -247,6 +207,7 @@ export default function Main() {
         return <View style={styles.container}>
           <ScanButton onClicked={_scan}/>
           <InputIdButton onClicked={_inputIdNumber}/>
+          <InputLineCountButton onClicked={_inputLineCount}/>
         </View>;
       case BarcodeScannerAppState.PRINTED:
         // Upload any changes to Firebase
@@ -258,14 +219,12 @@ export default function Main() {
               return {
                 id: s,
                 barcodeId: propsArray[0],
-                createdAt: parse(propsArray[1], 'yyyyMMddHHmm', new Date()),
+                createdAt: parse(propsArray[1], dateFormat, new Date()),
                 locationId: propsArray[2],
               } as Sample;
             });
-          sendDataToFirebase(newSamples);
+          sendDataToFirebase(newSamples, samplesCollection).then(_home);
         });
-
-        _home();
 
         return <SuccessMessage/>;
       case BarcodeScannerAppState.PRINTING:
@@ -300,8 +259,22 @@ export default function Main() {
           onCancel={_home}
           cameraType={undefined}
         />;
+      case BarcodeScannerAppState.COUNT:
+        return <InputLineCountScreen
+          onSave={handleLineCountSubmitted}
+          onCancel={_home}
+        />;
       case BarcodeScannerAppState.SETTINGS:
-        return <SettingsScreen/>;
+        return <SettingsScreen
+          cameraType={cameraType}
+          locationStr={locationStr}
+          onSave={(newCameraType: CameraType, newLocationStr: string) => {
+            setCameraType(newCameraType);
+            setLocationStr(newLocationStr);
+            _home();
+          }}
+          onCancel={_home}
+        />;
       default:
         return <ErrorMessage/>;
     }

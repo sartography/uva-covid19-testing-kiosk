@@ -4,7 +4,7 @@
     "name": "uva-covid19-testing-kiosk",
     "slug": "uva-covid19-testing-kiosk",
     "version": "1.0.0",
-    "orientation": "landscape",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
