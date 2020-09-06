@@ -136,6 +136,9 @@ export const styles = StyleSheet.create({
   safeAreaView: {
     flex: 1
   },
+  radio: {
+    backgroundColor: '#EEEEEE',
+  },
   row: {
     flex: 1,
     flexDirection: 'row',
@@ -143,10 +146,10 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   settings: {
-    flex: 1,
-    alignItems: 'stretch',
-    flexDirection: 'column',
-    justifyContent: 'center',
+    // flex: 1,
+    // alignItems: 'stretch',
+    // flexDirection: 'column',
+    // justifyContent: 'center',
     padding: 80,
     backgroundColor: DefaultTheme.colors.background,
     color: DefaultTheme.colors.text,
