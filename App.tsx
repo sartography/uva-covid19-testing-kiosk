@@ -98,7 +98,10 @@ export default function Main() {
       appendLineCounts(lineCountsFirestore);
     });
 
-    return () => unsubscribeSamples()
+    return () => {
+      unsubscribeSamples()
+      unsubscribeCounts()
+    }
   }, []);
 
   const _doNothing = () => {
@@ -210,6 +213,8 @@ export default function Main() {
           <InputLineCountButton onClicked={_inputLineCount}/>
         </View>;
       case BarcodeScannerAppState.PRINTED:
+        // TODO: Detect when user is online. If online, sync data with Firebase. If not online, just go home. Alternatively, set up a timer that periodically syncs data with the database.
+
         // Upload any changes to Firebase
         AsyncStorage.getAllKeys().then(keys => {
           const newSamples = keys
@@ -223,7 +228,10 @@ export default function Main() {
                 locationId: propsArray[2],
               } as Sample;
             });
-          sendDataToFirebase(newSamples, samplesCollection).then(_home);
+          sendDataToFirebase(newSamples, samplesCollection).then(() => {
+
+            return _home;
+          });
         });
 
         return <SuccessMessage/>;
