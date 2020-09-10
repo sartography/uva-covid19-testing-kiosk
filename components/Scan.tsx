@@ -17,10 +17,10 @@ export const Scanner = (props: ScannerProps): ReactElement => {
     </View>
     <View style={styles.centerMiddle}>
       <View style={styles.captureBox}/>
-      <Subheading style={styles.shadow}>
-        Place ID card with the barcode facing the camera. Keep the barcode in the green box.
-      </Subheading>
     </View>
+    <Subheading style={styles.shadow}>
+      Instruct the patient to hold their card up with the barcode facing the camera. Keep the barcode in the orange box.
+    </Subheading>
     <View style={styles.centerMiddle}>
       <Button
         mode="text"
@@ -78,6 +78,7 @@ export const IdNumberInput = (props: ScannerProps): ReactElement => {
         onChangeText={inputStr => setInputStr(inputStr)}
         mode="outlined"
         theme={DefaultTheme}
+        keyboardType="numeric"
       />
       <HelperText type="error" visible={hasErrors()}>
         ID number must be exactly 9 digits. No other characters are allowed.

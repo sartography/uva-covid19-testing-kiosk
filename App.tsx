@@ -55,13 +55,30 @@ export default function Main() {
   const [sampleId, setSampleId] = useState<string>('');
   const [barCodeId, setBarCodeId] = useState<string>('');
   const [sampleDate, setSampleDate] = useState<Date>(new Date());
-  const [locationStr, setLocationStr] = useState<string>('4321');
+  const [locationStr, setLocationStr] = useState<string>('0000');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [samples, setSamples] = useState<Sample[]>([]);
   const [lineCounts, setLineCounts] = useState<LineCount[]>([]);
   const [cameraType, setCameraType] = useState<CameraType>('back');
+  const [numCopies, setNumCopies] = useState<number>(0);
+
+  const defaultsInitializers = {
+    'default.cameraType': (s: string) => setCameraType(s as CameraType),
+    'default.numCopies': (s: string) => setNumCopies(parseInt(s, 10)),
+    'default.locationStr': (s: string) => setLocationStr(s),
+  };
 
   useEffect(() => {
+    AsyncStorage.multiGet(Object.keys(defaultsInitializers)).then(storedDefaults => {
+      console.log('storedDefaults', storedDefaults);
+      storedDefaults.forEach(d => {
+        if (d[1] !== null) {
+          // @ts-ignore
+          defaultsInitializers[d[0]](d[1]);
+        }
+      });
+    });
+
     BarCodeScanner.requestPermissionsAsync().then((value: PermissionResponse) => {
       if (value.granted) {
         setAppState(BarcodeScannerAppState.DEFAULT);
@@ -238,6 +255,7 @@ export default function Main() {
       case BarcodeScannerAppState.PRINTING:
         return <View style={styles.container}>
           <PrintingMessage
+            numCopies={numCopies}
             onCancel={_printed}
             id={sampleId}
             barCodeId={barCodeId}
@@ -275,10 +293,27 @@ export default function Main() {
       case BarcodeScannerAppState.SETTINGS:
         return <SettingsScreen
           cameraType={cameraType}
+          numCopies={numCopies}
           locationStr={locationStr}
-          onSave={(newCameraType: CameraType, newLocationStr: string) => {
+          onSave={(newCameraType: CameraType, newNumCopies: number, newLocationStr: string) => {
             setCameraType(newCameraType);
+            setNumCopies(newNumCopies);
             setLocationStr(newLocationStr);
+
+            console.log(newCameraType);
+            console.log(newLocationStr);
+            console.log(newNumCopies);
+
+            AsyncStorage.multiSet([
+              ['default.cameraType', newCameraType as string],
+              ['default.locationStr', newLocationStr],
+              ['default.numCopies', newNumCopies.toString()],
+            ]).then(() => {
+              console.log('New defaults stored.');
+              AsyncStorage.multiGet(Object.keys(defaultsInitializers)).then(storedDefaults => {
+                console.log('stored defaults after saving Settings:', storedDefaults);
+              });
+            });
             _home();
           }}
           onCancel={_home}

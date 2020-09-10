@@ -36,9 +36,9 @@ const _common = StyleSheet.create({
 export const styles = StyleSheet.create({
   captureBox: {
     borderStyle: 'solid',
-    borderColor: 'green',
+    borderColor: colors.accent,
     borderWidth: 10,
-    height: '30%',
+    height: '40%',
     width: '90%',
     borderRadius: 20,
   },
@@ -77,7 +77,8 @@ export const styles = StyleSheet.create({
     color: colors.onBackground,
     fontSize: 20,
     marginHorizontal: '15%',
-    marginVertical: 40,
+    marginTop: 0,
+    marginBottom: 40,
     textAlign: 'center',
     textShadowOffset: {width: 0, height: 0},
     textShadowRadius: 4,
