@@ -38,8 +38,8 @@ export const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderColor: 'green',
     borderWidth: 10,
-    height: 213,
-    width: 338,
+    height: '30%',
+    width: '90%',
     borderRadius: 20,
   },
   centerMiddle: {
@@ -72,6 +72,16 @@ export const styles = StyleSheet.create({
     fontSize: 20,
     padding: 20,
     textAlign: 'center',
+  },
+  shadow: {
+    color: colors.onBackground,
+    fontSize: 20,
+    marginHorizontal: '15%',
+    marginVertical: 40,
+    textAlign: 'center',
+    textShadowOffset: {width: 0, height: 0},
+    textShadowRadius: 4,
+    textShadowColor: '#000000',
   },
   heading: {
     ..._common.heading,
