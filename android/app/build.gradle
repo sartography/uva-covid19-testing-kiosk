@@ -136,8 +136,17 @@ android {
         def Properties versionProps = new Properties()
 
         versionProps.load(new FileInputStream(versionPropsFile))
-        def name = versionProps['VERSION_NAME']
+
+        // Increment the version
+        def version = versionProps['VERSION_NAME']
+        def build = versionProps['VERSION_BUILD'].toInteger() + 1
         def code = versionProps['VERSION_CODE'].toInteger() + 1
+        def incstep = '0.0.1'.split(/\./).collect{it.toInteger()}
+        def indexedVersionList = version.split(/\./).toList().withIndex()
+        def updatedVersionList = indexedVersionList.collect{num, idx -> num.toInteger()+incstep[idx]}
+
+        versionProps['VERSION_NAME']=updatedVersionList.join(".")
+        versionProps['VERSION_BUILD']=build.toString()
         versionProps['VERSION_CODE']=code.toString()
         versionProps.store(versionPropsFile.newWriter(), null)
 
