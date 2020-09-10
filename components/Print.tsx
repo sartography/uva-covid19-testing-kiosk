@@ -28,7 +28,7 @@ const _save = (props: PrintingProps): Promise<void> => {
 }
 
 const _print = async (props: PrintingProps): Promise<void> => {
-  const numCopies = 50; // Number of copies to print
+  const numCopies = 2; // Number of copies to print
   const units = 'mm';
   const pageSize = 28.6;
   const pageWidth = `${pageSize}${units}`;
