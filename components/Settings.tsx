@@ -4,13 +4,27 @@ import {DefaultTheme, Subheading, Title, RadioButton, Paragraph, TextInput, Help
 import {CameraType, SettingsScreenProps} from '../models/ElementProps';
 import {colors, styles} from './Styles';
 
+const _stringToInt = (inputStr: string): number => {
+  const num = parseInt(inputStr || '0', 10);
+  if (!isNaN(num)) {
+    return num;
+  }
+
+  return 0;
+}
+
 export const SettingsScreen = (props: SettingsScreenProps): ReactElement => {
     const [newCameraType, setNewCameraType] = useState<CameraType>(props.cameraType);
+    const [newNumCopies, setNewNumCopies] = useState<number>(props.numCopies);
     const [newLocationStr, setNewLocationStr] = useState<string>(props.locationStr);
 
-    const pattern = /^[\d]{4}$/;
-    const hasErrors = () => {
-      return !pattern.test(newLocationStr);
+    const _numCopiesHasErrors = () => {
+      return newNumCopies <= 0 || newNumCopies > 10;
+    };
+
+    const locPattern = /^[\d]{4}$/;
+    const _locHasErrors = () => {
+      return !locPattern.test(newLocationStr);
     };
 
     return <View style={styles.settings}>
@@ -34,6 +48,24 @@ export const SettingsScreen = (props: SettingsScreenProps): ReactElement => {
         </RadioButton.Group>
       </View>
 
+      <View style={{marginBottom: 40}}>
+        <Subheading style={{color: DefaultTheme.colors.text}}>Copies of labels</Subheading>
+        <Paragraph style={{color: DefaultTheme.colors.text}}>
+          Input the number of sets of labels to print for each patient
+        </Paragraph>
+        <TextInput
+          label="# of copies"
+          value={newNumCopies.toString()}
+          onChangeText={inputStr => setNewNumCopies(_stringToInt(inputStr))}
+          mode="outlined"
+          theme={DefaultTheme}
+          keyboardType="numeric"
+        />
+        <HelperText type="error" visible={_numCopiesHasErrors()}>
+          Please enter a number from 1 to 10.
+        </HelperText>
+      </View>
+
       <View style={{marginBottom: 10}}>
         <Subheading style={{color: DefaultTheme.colors.text}}>Location Code</Subheading>
         <Paragraph style={{color: DefaultTheme.colors.text}}>
@@ -46,8 +78,9 @@ export const SettingsScreen = (props: SettingsScreenProps): ReactElement => {
           onChangeText={inputStr => setNewLocationStr(inputStr)}
           mode="outlined"
           theme={DefaultTheme}
+          keyboardType="numeric"
         />
-        <HelperText type="error" visible={hasErrors()}>
+        <HelperText type="error" visible={_locHasErrors()}>
           Location number must be exactly 4 digits. No other characters are allowed.
         </HelperText>
         <Button
@@ -55,8 +88,8 @@ export const SettingsScreen = (props: SettingsScreenProps): ReactElement => {
           mode="contained"
           color={colors.primary}
           style={{marginBottom: 10}}
-          disabled={hasErrors()}
-          onPress={() => props.onSave(newCameraType, newLocationStr)}
+          disabled={_locHasErrors() || _numCopiesHasErrors()}
+          onPress={() => props.onSave(newCameraType, newNumCopies, newLocationStr)}
         >Save</Button>
         <Button
           icon="cancel"

@@ -28,7 +28,7 @@ const _save = (props: PrintingProps): Promise<void> => {
 }
 
 const _print = async (props: PrintingProps): Promise<void> => {
-  const numCopies = 2; // Number of copies to print
+  const numCopies = props.numCopies; // Number of copies to print
   const units = 'mm';
   const pageSize = 28.6;
   const pageWidth = `${pageSize}${units}`;
@@ -111,12 +111,7 @@ const _print = async (props: PrintingProps): Promise<void> => {
   const pagesArray = [];
 
   for (let i=0; i<numCopies; i++) {
-    // TODO: Comment out these two lines, because this is just for testing.
-    const fakeBarcodeId = `${i}`.padStart(9, '0');
-    const fakeDate = new Date();
-    const fakeId = fakeBarcodeId + '-' + format(fakeDate, 'yyyyMMddHH') + '-' + `${i}`.padStart(2, '0') + '-' + props.location;
-
-    const svgString = await qrcode.toString(fakeId, {
+    const svgString = await qrcode.toString(props.id, {
       width: 72,   // 20mm
       height: 72,
       margin: 10,
@@ -132,18 +127,18 @@ const _print = async (props: PrintingProps): Promise<void> => {
       <div class="page-container">
         <div class="circle"></div>
         ${svgString}
-        <div class="date">${format(fakeDate, 'yyyy-MM-dd')}</div>
+        <div class="date">${format(props.date, 'yyyy-MM-dd')}</div>
         <div class="time">
           T<br />
-          ${format(fakeDate, 'HH')}<br />
-          ${`${i}`.padStart(2, '0')}
+          ${format(props.date, 'HH')}<br />
+          ${format(props.date, 'mm')}
         </div>
         <div class="location">
           L<br />
           ${props.location.slice(0, 2)}<br />
           ${props.location.slice(2)}<br />
         </div>
-        <div class="barCodeId">#${fakeBarcodeId}</div>
+        <div class="barCodeId">#${props.barCodeId}</div>
       </div>
     `;
 

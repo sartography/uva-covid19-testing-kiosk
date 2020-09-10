@@ -30,8 +30,9 @@ export interface InputLineCountScreenProps extends ElementProps {
 
 export interface SettingsScreenProps extends ElementProps {
   cameraType: CameraType;
+  numCopies: number;
   locationStr: string;
-  onSave: (newCameraType: CameraType, newLocationStr: string) => void;
+  onSave: (newCameraType: CameraType, newNumCopies: number, newLocationStr: string) => void;
   onCancel: () => void;
 }
 
@@ -42,5 +43,6 @@ export interface ScannerProps extends ElementProps {
 }
 
 export interface PrintingProps extends BarCodeProps {
+  numCopies: number;
   onCancel: () => void;
 }
