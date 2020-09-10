@@ -28,113 +28,135 @@ const _save = (props: PrintingProps): Promise<void> => {
 }
 
 const _print = async (props: PrintingProps): Promise<void> => {
-  const svgString = await qrcode.toString(props.id, {
-    width: 72,   // 20mm
-    height: 72,
-    margin: 10,
-    errorCorrectionLevel: 'high',
-    type: 'svg',
-    color: {
-      light: '#ffffff00',
-      dark: '#000',
-    }
-  });
+  const numCopies = 50; // Number of copies to print
+  const units = 'mm';
+  const pageSize = 28.6;
+  const pageWidth = `${pageSize}${units}`;
+  const sideTextWidth = `4${units}`;
+  const sideTextTop = `11${units}`;
+  const sideTextMargin = `1.5${units}`;
+  const topTextMargin = `3${units}`;
+  const bottomTextMargin = `2.5${units}`;
+  const fontSize = `${6 * 0.3528}${units}`; // 6pt * ( 0.3528 mm / pt )
 
-  //
-  const fontSize = 6 * ( 1 / 72 ); // 6pt * ( 1pt / 72in )
-  const pageSize = 28.6;           // Page size in millimeters
-  const numCopies = 3;             // Number of copies to print
-  const pageUnits = 'mm';
   const styleHtml = `
     <style>
       @media print {
         @page {
-          size: ${pageSize * numCopies}${pageUnits};
+          size: ${pageWidth};
           margin: 0;
+          padding: 0;
         }
         
         html, body {
-          margin: 0;
-          padding: 0;
+          height: ${100 * numCopies}vh; 
+          margin: 0 !important; 
+          padding: 0 !important;
+          overflow: hidden;
         }
         
         .page-container {
+          display: block;
           position: relative;
           margin: 0;
           padding: 0;
+          width: ${pageWidth};
+          height: ${pageWidth};
         }
 
         .circle {
           position: absolute;
           top: 0;
           left: 0;
-          width: ${pageSize}${pageUnits};
-          height: ${pageSize}${pageUnits};
+          width: ${pageWidth};
+          height: ${pageWidth};
           color: #000;
           text-align: center;
           margin: 0;
           padding: 0;
-          border-radius: ${pageSize}${pageUnits};
-          background-color: transparent;
+          border-radius: ${pageWidth};
         }
         
-        .circle .date,
-        .circle .time,
-        .circle .location,
-        .circle .barCodeId {
+        .page-container .date,
+        .page-container .time,
+        .page-container .location,
+        .page-container .barCodeId {
           position: absolute;
           margin: 0;
           padding: 0;
-          font-size: ${fontSize}${pageUnits};
+          font-size: ${fontSize};
+          font-weight: bold;
           font-family: monospace;
           text-align: center;
           line-height: 1;
         }
 
-        .circle .date      { top: 3.5mm;  left: 0;      width: 100%; }
-        .circle .time      { top: 11mm;   left: 1.5mm;  width: 4mm;  }
-        .circle .location  { top: 11mm;   right: 1.5mm; width: 4mm;  }
-        .circle .barCodeId { bottom: 3mm; left: 0;      width: 100%; }
+        .page-container .date      { top: ${topTextMargin};       left: 0;                  width: 100%; }
+        .page-container .time      { top: ${sideTextTop};         left: ${sideTextMargin};  width: ${sideTextWidth}; }
+        .page-container .location  { top: ${sideTextTop};         right: ${sideTextMargin}; width: ${sideTextWidth}; }
+        .page-container .barCodeId { bottom: ${bottomTextMargin}; left: 0;                  width: 100%; }
         
         svg {
           position: absolute;
           top: 0;
           left: 0;
-          width: ${pageSize}${pageUnits};
-          height: ${pageSize}${pageUnits};
+          width: ${pageWidth};
+          height: ${pageWidth};
         }
       }
     </style>
   `;
 
-  const pageHtml = `
-    <div class="page-container">
-      <div class="circle" />
-      ${svgString}
-      <div class="date">${format(props.date, 'yyyy-MM-dd')}</div>
-      <div class="time">
-        T<br />
-        ${format(props.date, 'HH')}<br />
-        ${format(props.date, 'mm')}
+  // Repeat the page HTML for as many copies as we need.
+  const pagesArray = [];
+
+  for (let i=0; i<numCopies; i++) {
+    // TODO: Comment out these two lines, because this is just for testing.
+    const fakeBarcodeId = `${i}`.padStart(9, '0');
+    const fakeDate = new Date();
+    const fakeId = fakeBarcodeId + '-' + format(fakeDate, 'yyyyMMddHH') + '-' + `${i}`.padStart(2, '0') + '-' + props.location;
+
+    const svgString = await qrcode.toString(fakeId, {
+      width: 72,   // 20mm
+      height: 72,
+      margin: 10,
+      errorCorrectionLevel: 'high',
+      type: 'svg',
+      color: {
+        light: '#ffffff00',
+        dark: '#000',
+      }
+    });
+
+    const pageHtml = `
+      <div class="page-container">
+        <div class="circle"></div>
+        ${svgString}
+        <div class="date">${format(fakeDate, 'yyyy-MM-dd')}</div>
+        <div class="time">
+          T<br />
+          ${format(fakeDate, 'HH')}<br />
+          ${`${i}`.padStart(2, '0')}
+        </div>
+        <div class="location">
+          L<br />
+          ${props.location.slice(0, 2)}<br />
+          ${props.location.slice(2)}<br />
+        </div>
+        <div class="barCodeId">#${fakeBarcodeId}</div>
       </div>
-      <div class="location">
-        L<br />
-        ${props.location.slice(0, 2)}<br />
-        ${props.location.slice(2)}<br />
-      </div>
-      <div class="barCodeId">#${props.barCodeId}</div>
-    </div>
+    `;
+
+    pagesArray.push(pageHtml);
+  }
+
+  const pagesHtml = pagesArray.join('\n');
+  const html = `
+    ${styleHtml}
+    ${pagesHtml}
   `;
 
-  // Repeat the page HTML for as many copies as we need.
-  const pagesHtml = new Array(numCopies).fill(pageHtml).join('\n');
-
-  return Print.printAsync({
-    html: `
-      ${styleHtml}
-      ${pagesHtml}
-    `,
-  });
+  return Print.printAsync({html});
 }
 
 export const PrintButton = (props: ButtonProps): ReactElement => {
