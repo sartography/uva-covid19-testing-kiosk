@@ -1,8 +1,8 @@
 // @refresh reset
 import AsyncStorage from '@react-native-community/async-storage';
+import NetInfo, {NetInfoState, NetInfoStateType} from '@react-native-community/netinfo';
 import {format, parse} from 'date-fns';
 import {BarCodeEvent, BarCodeScanner, PermissionResponse} from 'expo-barcode-scanner';
-// @ts-ignore
 import * as firebase from 'firebase';
 import 'firebase/firestore';
 import React, {ReactElement, useCallback, useEffect, useState} from 'react';
@@ -15,20 +15,12 @@ import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
 import {IdNumberInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
 import {SettingsScreen} from './components/Settings';
 import {colors, styles} from './components/Styles';
+import {sendDataToFirebase, SyncMessage} from './components/Sync';
+import {dateFormat, firebaseConfig} from './config/default';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
 import {CameraType, ElementProps, StateProps} from './models/ElementProps';
 import {LineCount} from './models/LineCount';
 import {Sample} from './models/Sample';
-
-const firebaseConfig = {
-  apiKey: 'api_key_goes_here',
-  authDomain: "uva-covid19-testing-kiosk.firebaseapp.com",
-  databaseURL: "https://uva-covid19-testing-kiosk.firebaseio.com",
-  projectId: 'project_id_goes_here',
-  storageBucket: "uva-covid19-testing-kiosk.appspot.com",
-  messagingSenderId: 'sender_id_goes_here',
-  appId: 'app_id_goes_here'
-};
 
 // Initialize Firebase if not already initialized.
 if (firebase.apps.length === 0) {
@@ -37,13 +29,12 @@ if (firebase.apps.length === 0) {
 
 YellowBox.ignoreWarnings([
   'Setting a timer for a long period of time',  // Ignore Firebase timer warnings
-  'Remote debugger is in a background tab',  // Ignore Firebase timer warnings
+  'Remote debugger is in a background tab',     // Ignore remote debugger warnings
 ]);
 
 const db = firebase.firestore();
 const samplesCollection = db.collection('samples');
 const countsCollection = db.collection('counts');
-const dateFormat = 'yyyyMMddHHmm';
 
 const theme = {
   ...DefaultTheme,
@@ -61,6 +52,7 @@ export default function Main() {
   const [lineCounts, setLineCounts] = useState<LineCount[]>([]);
   const [cameraType, setCameraType] = useState<CameraType>('back');
   const [numCopies, setNumCopies] = useState<number>(0);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
   const defaultsInitializers = {
     'default.cameraType': (s: string) => setCameraType(s as CameraType),
@@ -77,6 +69,12 @@ export default function Main() {
           defaultsInitializers[d[0]](d[1]);
         }
       });
+    });
+
+    NetInfo.addEventListener((state: NetInfoState) => {
+      if (state.type === NetInfoStateType.wifi) {
+        setIsConnected(!!(state.isConnected && state.isInternetReachable));
+      }
     });
 
     BarCodeScanner.requestPermissionsAsync().then((value: PermissionResponse) => {
@@ -182,10 +180,6 @@ export default function Main() {
     setLineCounts((previousLineCounts) => previousLineCounts.concat(newLineCounts));
   }, [lineCounts]);
 
-  const sendDataToFirebase = async (newData: Array<Sample|LineCount>, collection: firebase.firestore.CollectionReference) => {
-    const writes = newData.map((s: Sample|LineCount) => collection.doc(s.id).set(s));
-    await Promise.all(writes);
-  }
 
   const ErrorMessage = (props: ElementProps): ReactElement => {
     return <View style={styles.fullScreen}>
@@ -208,10 +202,6 @@ export default function Main() {
     >Loading...</Snackbar>;
   }
 
-  const SuccessMessage = (props: ElementProps): ReactElement => {
-    return <Title>Your barcode label has printed successfully.</Title>;
-  }
-
   const ActionButtons = (props: ElementProps): ReactElement => {
     return <View>
       <PrintButton onClicked={_print}/>
@@ -230,28 +220,13 @@ export default function Main() {
           <InputLineCountButton onClicked={_inputLineCount}/>
         </View>;
       case BarcodeScannerAppState.PRINTED:
-        // TODO: Detect when user is online. If online, sync data with Firebase. If not online, just go home. Alternatively, set up a timer that periodically syncs data with the database.
-
-        // Upload any changes to Firebase
-        AsyncStorage.getAllKeys().then(keys => {
-          const newSamples = keys
-            .filter(s => /^[\d]{9}-[\d]{12}-[\d]{4}$/.test(s))
-            .map(s => {
-              const propsArray = s.split('-');
-              return {
-                id: s,
-                barcodeId: propsArray[0],
-                createdAt: parse(propsArray[1], dateFormat, new Date()),
-                locationId: propsArray[2],
-              } as Sample;
-            });
-          sendDataToFirebase(newSamples, samplesCollection).then(() => {
-
-            return _home;
-          });
-        });
-
-        return <SuccessMessage/>;
+        return <SyncMessage
+          isConnected={isConnected}
+          samplesCollection={samplesCollection}
+          countsCollection={countsCollection}
+          onCancel={_home}
+          onSync={_home}
+        />;
       case BarcodeScannerAppState.PRINTING:
         return <View style={styles.container}>
           <PrintingMessage
@@ -325,7 +300,7 @@ export default function Main() {
 
   return (
     <PaperProvider theme={theme}>
-      <Appbar.Header dark={true}>
+      <Appbar.Header dark={true} style={isConnected ? styles.connected : styles.disconnected}>
         <Appbar.Content title={`${appExpo.description} #${locationStr}`}/>
         <Appbar.Action icon="home" onPress={_home}/>
         <Appbar.Action icon="settings" onPress={_settings}/>

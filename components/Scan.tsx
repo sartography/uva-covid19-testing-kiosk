@@ -17,10 +17,10 @@ export const Scanner = (props: ScannerProps): ReactElement => {
     </View>
     <View style={styles.centerMiddle}>
       <View style={styles.captureBox}/>
+      <Subheading style={styles.shadow}>
+        Instruct the patient to hold their card up with the barcode facing the camera. Keep the barcode in the orange box.
+      </Subheading>
     </View>
-    <Subheading style={styles.shadow}>
-      Instruct the patient to hold their card up with the barcode facing the camera. Keep the barcode in the orange box.
-    </Subheading>
     <View style={styles.centerMiddle}>
       <Button
         mode="text"
