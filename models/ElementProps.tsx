@@ -1,8 +1,9 @@
 import {BarCodeScannedCallback} from 'expo-barcode-scanner';
 import {BarcodeScannerAppState} from './BarcodeScannerAppState';
+import * as firebase from 'firebase';
+import 'firebase/firestore';
 
 export declare type CameraType = number | 'front' | 'back' | undefined;
-export declare type CheckedStatus ='checked' | 'unchecked' | undefined;
 
 export interface ElementProps {
   title?: string;
@@ -40,6 +41,14 @@ export interface ScannerProps extends ElementProps {
   onScanned: BarCodeScannedCallback;
   onCancel: () => void;
   cameraType: CameraType;
+}
+
+export interface SyncProps extends ElementProps {
+  isConnected: boolean;
+  onSync: () => void;
+  onCancel: () => void;
+  samplesCollection: firebase.firestore.CollectionReference<firebase.firestore.DocumentData>;
+  countsCollection: firebase.firestore.CollectionReference<firebase.firestore.DocumentData>;
 }
 
 export interface PrintingProps extends BarCodeProps {

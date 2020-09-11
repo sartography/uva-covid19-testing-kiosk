@@ -46,6 +46,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  connected: {
+    backgroundColor: colors.primary
+  },
+  disconnected: {
+    backgroundColor: '#333333'
+  },
   container: {
     ..._common.container,
     ..._common.dark,
