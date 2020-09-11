@@ -1,20 +1,20 @@
 // @refresh reset
 import AsyncStorage from '@react-native-community/async-storage';
 import NetInfo, {NetInfoState, NetInfoStateType} from '@react-native-community/netinfo';
-import {format, parse} from 'date-fns';
+import {format} from 'date-fns';
 import {BarCodeEvent, BarCodeScanner, PermissionResponse} from 'expo-barcode-scanner';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
 import React, {ReactElement, useCallback, useEffect, useState} from 'react';
 import {AppRegistry, SafeAreaView, View, YellowBox} from 'react-native';
-import {Appbar, DefaultTheme, Provider as PaperProvider, Snackbar, Title,} from 'react-native-paper';
+import {Appbar, Provider as PaperProvider, Snackbar,} from 'react-native-paper';
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
 import {InputLineCountButton, InputLineCountScreen} from './components/LineCount';
 import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
 import {IdNumberInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
 import {SettingsScreen} from './components/Settings';
-import {colors, styles} from './components/Styles';
+import {styles, theme} from './components/Styles';
 import {sendDataToFirebase, SyncMessage} from './components/Sync';
 import {dateFormat, firebaseConfig} from './config/default';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
@@ -22,24 +22,19 @@ import {CameraType, ElementProps, StateProps} from './models/ElementProps';
 import {LineCount} from './models/LineCount';
 import {Sample} from './models/Sample';
 
-// Initialize Firebase if not already initialized.
-if (firebase.apps.length === 0) {
-  firebase.initializeApp(firebaseConfig);
-}
-
 YellowBox.ignoreWarnings([
   'Setting a timer for a long period of time',  // Ignore Firebase timer warnings
   'Remote debugger is in a background tab',     // Ignore remote debugger warnings
 ]);
 
+// Initialize Firebase if not already initialized.
+if (firebase.apps.length === 0) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 const db = firebase.firestore();
 const samplesCollection = db.collection('samples');
 const countsCollection = db.collection('counts');
-
-const theme = {
-  ...DefaultTheme,
-  colors: colors,
-}
 
 export default function Main() {
   const [appState, setAppState] = useState<BarcodeScannerAppState>(BarcodeScannerAppState.INITIAL);
@@ -61,8 +56,9 @@ export default function Main() {
   };
 
   useEffect(() => {
+
+    // Retrieve previous stored settings, if they exist.
     AsyncStorage.multiGet(Object.keys(defaultsInitializers)).then(storedDefaults => {
-      console.log('storedDefaults', storedDefaults);
       storedDefaults.forEach(d => {
         if (d[1] !== null) {
           // @ts-ignore
@@ -71,12 +67,14 @@ export default function Main() {
       });
     });
 
+    // Watch for changes to internet connectivity.
     NetInfo.addEventListener((state: NetInfoState) => {
       if (state.type === NetInfoStateType.wifi) {
         setIsConnected(!!(state.isConnected && state.isInternetReachable));
       }
     });
 
+    // Ask for permission to use the camera.
     BarCodeScanner.requestPermissionsAsync().then((value: PermissionResponse) => {
       if (value.granted) {
         setAppState(BarcodeScannerAppState.DEFAULT);
@@ -84,43 +82,10 @@ export default function Main() {
         setAppState(BarcodeScannerAppState.ERROR);
       }
     });
-
-    const unsubscribeSamples = samplesCollection.onSnapshot(querySnapshot => {
-      // Transform and sort the data returned from Firebase
-      const samplesFirestore = querySnapshot
-        .docChanges()
-        .filter(({type}) => type === 'added')
-        .map(({doc}) => {
-          const sample = doc.data();
-          return {...sample, createdAt: sample.createdAt.toDate()} as Sample;
-        })
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-      appendSamples(samplesFirestore);
-    });
-
-    const unsubscribeCounts = countsCollection.onSnapshot(querySnapshot => {
-      // Transform and sort the data returned from Firebase
-      const lineCountsFirestore = querySnapshot
-        .docChanges()
-        .filter(({type}) => type === 'added')
-        .map(({doc}) => {
-          const lineCount = doc.data();
-          return {...lineCount, createdAt: lineCount.createdAt.toDate()} as LineCount;
-        })
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-      appendLineCounts(lineCountsFirestore);
-    });
-
-    return () => {
-      unsubscribeSamples()
-      unsubscribeCounts()
-    }
   }, []);
 
-  const _doNothing = () => {
-  };
+  // State event handlers
+  const _doNothing = () => {};
   const _scan = () => {
     setErrorMessage('');
     setAppState(BarcodeScannerAppState.SCANNING);
@@ -171,15 +136,6 @@ export default function Main() {
     };
     sendDataToFirebase([newData], countsCollection);
   }
-
-  const appendSamples = useCallback((newSamples) => {
-    setSamples((previousSamples) => previousSamples.concat(newSamples));
-  }, [samples]);
-
-  const appendLineCounts = useCallback((newLineCounts) => {
-    setLineCounts((previousLineCounts) => previousLineCounts.concat(newLineCounts));
-  }, [lineCounts]);
-
 
   const ErrorMessage = (props: ElementProps): ReactElement => {
     return <View style={styles.fullScreen}>
@@ -274,10 +230,6 @@ export default function Main() {
             setCameraType(newCameraType);
             setNumCopies(newNumCopies);
             setLocationStr(newLocationStr);
-
-            console.log(newCameraType);
-            console.log(newLocationStr);
-            console.log(newNumCopies);
 
             AsyncStorage.multiSet([
               ['default.cameraType', newCameraType as string],

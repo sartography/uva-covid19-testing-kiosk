@@ -9,6 +9,12 @@ export const colors = {
   notification: '#E57200',
 };
 
+// Set up the Material UI theme
+export const theme = {
+  ...DefaultTheme,
+  colors: colors,
+}
+
 const _common = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
