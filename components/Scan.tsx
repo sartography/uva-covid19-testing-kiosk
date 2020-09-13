@@ -2,7 +2,7 @@ import {BarCodeScanner} from 'expo-barcode-scanner';
 import React, {ReactElement, useState} from 'react';
 import {Text, View} from 'react-native';
 import {Button, DefaultTheme, HelperText, Subheading, TextInput, Title} from 'react-native-paper';
-import {ButtonProps, ScannerProps} from '../models/ElementProps';
+import {ButtonProps, ElementProps, InputInitialsProps, ScannerProps} from '../models/ElementProps';
 import {colors, styles} from './Styles';
 
 
@@ -82,6 +82,52 @@ export const IdNumberInput = (props: ScannerProps): ReactElement => {
       />
       <HelperText type="error" visible={hasErrors()}>
         ID number must be exactly 9 digits. No other characters are allowed.
+      </HelperText>
+      <Button
+        icon="check"
+        mode="contained"
+        color={colors.primary}
+        style={{marginBottom: 10}}
+        disabled={hasErrors()}
+        onPress={onSubmit}
+      >Submit</Button>
+      <Button
+        icon="cancel"
+        mode="outlined"
+        color={colors.primary}
+        onPress={props.onCancel}
+      >Cancel</Button>
+    </View>
+  </View>;
+};
+
+
+export const InitialsInput = (props: InputInitialsProps): ReactElement => {
+  const [inputStr, setInputStr] = useState<string>('');
+  const pattern = /^[A-Za-z]{1,5}$/;
+  const hasErrors = () => {
+    return !pattern.test(inputStr);
+  };
+
+  const onSubmit = () => {
+    props.onSave(inputStr);
+  }
+
+  return <View style={styles.settings}>
+    <Title style={styles.headingInverse}>Enter Patient's Initials</Title>
+    <View style={{marginBottom: 10}}>
+      <Subheading style={{color: DefaultTheme.colors.text, marginBottom: 60}}>
+        Prompt the patient to show their name on their ID card. Enter the initials of their first name, middle name (if applicable), and last name.
+      </Subheading>
+      <TextInput
+        label="Initials"
+        value={inputStr}
+        onChangeText={inputStr => setInputStr(inputStr.toLowerCase())}
+        mode="outlined"
+        theme={DefaultTheme}
+      />
+      <HelperText type="error" visible={hasErrors()}>
+        Please enter letters only.
       </HelperText>
       <Button
         icon="check"

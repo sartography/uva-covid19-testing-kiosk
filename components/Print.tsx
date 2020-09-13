@@ -5,6 +5,7 @@ import React, {ReactElement, useEffect, useState} from 'react';
 import {Text, View} from 'react-native';
 import {Button, Title} from 'react-native-paper';
 import QRCode from 'react-native-qrcode-svg';
+import {dateDisplayFormat} from '../config/default';
 import {BarCodeProps, ButtonProps, PrintingProps} from '../models/ElementProps';
 import {Sample} from '../models/Sample';
 import {colors, styles} from './Styles';
@@ -201,6 +202,7 @@ export const PrintingMessage = (props: PrintingProps): ReactElement => {
         barCodeId={props.barCodeId}
         date={props.date}
         location={props.location}
+        initials={props.initials}
       />
     </View>
     <View style={styles.container}>
@@ -218,12 +220,11 @@ export const PrintingMessage = (props: PrintingProps): ReactElement => {
   </View>;
 }
 
-
 export const BarCodeDisplay = (props: BarCodeProps): ReactElement => {
   return <View style={styles.printPreview}>
-    <Text style={styles.label}>ID#: {props.id}</Text>
-    <Text style={styles.label}>Date: {props.date.toLocaleDateString()}, {props.date.toLocaleTimeString()}</Text>
-    <Text style={styles.label}>Location {props.location}</Text>
+    <Text style={styles.label}>ID #: {props.id}</Text>
+    <Text style={styles.label}>Date: {format(props.date, dateDisplayFormat)}</Text>
+    <Text style={styles.label}>Location #: {props.location}</Text>
     <QRCode value={props.id}/>
   </View>;
 }

@@ -9,7 +9,6 @@ import {LineCount} from '../models/LineCount';
 import {Sample} from '../models/Sample';
 import {CancelButton} from './Common';
 import {styles} from './Styles';
-// @ts-ignore
 import * as firebase from 'firebase';
 import 'firebase/firestore';
 
@@ -22,10 +21,14 @@ export const SyncMessage = (props: SyncProps): ReactElement => {
   const [syncStatus, setSyncStatus] = useState<string>('Syncing data...');
 
   useEffect(() => {
-    // TODO: Detect when user is online. If online, sync data with Firebase. If not online, just go home. Alternatively, set up a timer that periodically syncs data with the database.
+    // TODO: Alternatively, set up a timer that periodically syncs data with the database.
 
-    // Upload any changes to Firebase
+    // Detect when user is online. If online, sync data with Firebase.
     if (props.isConnected) {
+      // Get the collection subscription
+      const unsubscribe = props.samplesCollection.onSnapshot(q => {}, e => {});
+
+      // Upload any changes to Firebase
       AsyncStorage.getAllKeys().then(keys => {
         const newSamples = keys
           .filter(s => /^[\d]{9}-[\d]{12}-[\d]{4}$/.test(s))
@@ -40,11 +43,16 @@ export const SyncMessage = (props: SyncProps): ReactElement => {
           });
 
         sendDataToFirebase(newSamples, props.samplesCollection).then(() => {
+          // TODO: Delete stored keys in AsyncStorage
+
           setSyncStatus('Data synced.');
           props.onSync();
         });
       });
+
+      return () => unsubscribe();
     } else {
+      // If not online, just go home.
       setSyncStatus('Device is not online. Skipping sync...');
       props.onCancel();
     }
