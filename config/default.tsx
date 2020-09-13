@@ -9,3 +9,4 @@ export const firebaseConfig = {
 };
 
 export const dateFormat = 'yyyyMMddHHmm';
+export const dateDisplayFormat = 'MM/dd/yyyy, hh:mm aa';

@@ -18,10 +18,16 @@ export interface BarCodeProps extends ElementProps {
   barCodeId: string;
   date: Date;
   location: string;
+  initials: string;
 }
 
 export interface ButtonProps extends ElementProps {
   onClicked: () => void;
+}
+
+export interface InputInitialsProps extends ElementProps {
+  onSave: (newInitials: string) => void;
+  onCancel: () => void;
 }
 
 export interface InputLineCountScreenProps extends ElementProps {

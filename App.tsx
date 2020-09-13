@@ -5,14 +5,14 @@ import {format} from 'date-fns';
 import {BarCodeEvent, BarCodeScanner, PermissionResponse} from 'expo-barcode-scanner';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
-import React, {ReactElement, useCallback, useEffect, useState} from 'react';
+import React, {ReactElement, useEffect, useState} from 'react';
 import {AppRegistry, SafeAreaView, View, YellowBox} from 'react-native';
 import {Appbar, Provider as PaperProvider, Snackbar,} from 'react-native-paper';
 import {expo as appExpo} from './app.json';
 import {CancelButton} from './components/Common';
 import {InputLineCountButton, InputLineCountScreen} from './components/LineCount';
 import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
-import {IdNumberInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
+import {IdNumberInput, InitialsInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
 import {SettingsScreen} from './components/Settings';
 import {styles, theme} from './components/Styles';
 import {sendDataToFirebase, SyncMessage} from './components/Sync';
@@ -48,6 +48,7 @@ export default function Main() {
   const [cameraType, setCameraType] = useState<CameraType>('back');
   const [numCopies, setNumCopies] = useState<number>(0);
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [initials, setInitials] = useState<string>('');
 
   const defaultsInitializers = {
     'default.cameraType': (s: string) => setCameraType(s as CameraType),
@@ -92,11 +93,11 @@ export default function Main() {
   };
   const _inputIdNumber = () => {
     setErrorMessage('');
-    setAppState(BarcodeScannerAppState.INPUT);
+    setAppState(BarcodeScannerAppState.INPUT_ID);
   };
   const _inputLineCount = () => {
     setErrorMessage('');
-    setAppState(BarcodeScannerAppState.COUNT);
+    setAppState(BarcodeScannerAppState.INPUT_LINE_COUNT);
   };
   const _print = () => setAppState(BarcodeScannerAppState.PRINTING);
   const _printed = () => setAppState(BarcodeScannerAppState.PRINTED);
@@ -113,16 +114,20 @@ export default function Main() {
     if (pattern.test(barCodeString)) {
       const cardId = e.data.slice(0, 9);
       const newSampleDate = new Date();
-      const newSampleId = [cardId, format(newSampleDate, dateFormat), locationStr].join('-');
-
-      setSampleId(newSampleId);
       setBarCodeId(cardId);
       setSampleDate(newSampleDate);
-      setAppState(BarcodeScannerAppState.SCANNED);
+      setAppState(BarcodeScannerAppState.INPUT_INITIALS);
     } else {
       setErrorMessage(`The barcode data "${e.data}" is not from a valid ID card.`);
       setAppState(BarcodeScannerAppState.ERROR);
     }
+  };
+
+  const handleInitialsInput = (newInitials: string) => {
+    setInitials(newInitials);
+    const newSampleId = [barCodeId, newInitials, format(sampleDate, dateFormat), locationStr].join('-');
+    setSampleId(newSampleId);
+    setAppState(BarcodeScannerAppState.SCANNED);
   };
 
   const handleLineCountSubmitted = (newCount: number) => {
@@ -192,6 +197,7 @@ export default function Main() {
             barCodeId={barCodeId}
             date={sampleDate}
             location={locationStr}
+            initials={initials}
           />
         </View>;
       case BarcodeScannerAppState.SCANNED:
@@ -201,6 +207,7 @@ export default function Main() {
             barCodeId={barCodeId}
             date={sampleDate}
             location={locationStr}
+            initials={initials}
           />
           <ActionButtons/>
         </View>;
@@ -210,13 +217,18 @@ export default function Main() {
           onCancel={_home}
           cameraType={cameraType}
         />;
-      case BarcodeScannerAppState.INPUT:
+      case BarcodeScannerAppState.INPUT_ID:
         return <IdNumberInput
           onScanned={handleBarCodeScanned}
           onCancel={_home}
           cameraType={undefined}
         />;
-      case BarcodeScannerAppState.COUNT:
+      case BarcodeScannerAppState.INPUT_INITIALS:
+        return <InitialsInput
+          onSave={handleInitialsInput}
+          onCancel={_home}
+        />;
+      case BarcodeScannerAppState.INPUT_LINE_COUNT:
         return <InputLineCountScreen
           onSave={handleLineCountSubmitted}
           onCancel={_home}
