@@ -1,3 +1,7 @@
+/**
+ Example configuration file. Make a copy of this file, name it "default.tsx", and place it in the config directory.
+ Then modify the values below to match the actual Firebase configuration.
+ */
 import {AppDefaults} from '../models/Default';
 import {CameraType} from '../models/ElementProps';
 

@@ -16,7 +16,7 @@ import {IdNumberInput, InitialsInput, InputIdButton, ScanButton, Scanner} from '
 import {SettingsScreen} from './components/Settings';
 import {styles, theme} from './components/Styles';
 import {sendDataToFirebase, SyncMessage} from './components/Sync';
-import {dateFormat, firebaseConfig} from './config/default';
+import {firebaseConfig, defaults} from './config/default';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
 import {CameraType, ElementProps, StateProps} from './models/ElementProps';
 import {LineCount} from './models/LineCount';
@@ -33,20 +33,20 @@ if (firebase.apps.length === 0) {
 }
 
 const db = firebase.firestore();
-const samplesCollection = db.collection('samples');
-const countsCollection = db.collection('counts');
+const samplesCollection = db.collection(defaults.samplesCollection);
+const countsCollection = db.collection(defaults.countsCollection);
 
 export default function Main() {
   const [appState, setAppState] = useState<BarcodeScannerAppState>(BarcodeScannerAppState.INITIAL);
   const [sampleId, setSampleId] = useState<string>('');
   const [barCodeId, setBarCodeId] = useState<string>('');
   const [sampleDate, setSampleDate] = useState<Date>(new Date());
-  const [locationStr, setLocationStr] = useState<string>('0000');
+  const [locationStr, setLocationStr] = useState<string>(defaults.locationId);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [samples, setSamples] = useState<Sample[]>([]);
   const [lineCounts, setLineCounts] = useState<LineCount[]>([]);
-  const [cameraType, setCameraType] = useState<CameraType>('back');
-  const [numCopies, setNumCopies] = useState<number>(0);
+  const [cameraType, setCameraType] = useState<CameraType>(defaults.cameraType);
+  const [numCopies, setNumCopies] = useState<number>(defaults.numCopies);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [initials, setInitials] = useState<string>('');
 
@@ -69,6 +69,7 @@ export default function Main() {
     });
 
     // Watch for changes to internet connectivity.
+    // TODO: Set up a timer that periodically syncs data with the database if connected.
     NetInfo.addEventListener((state: NetInfoState) => {
       if (state.type === NetInfoStateType.wifi) {
         setIsConnected(!!(state.isConnected && state.isInternetReachable));
@@ -100,7 +101,7 @@ export default function Main() {
     setAppState(BarcodeScannerAppState.INPUT_LINE_COUNT);
   };
   const _print = () => setAppState(BarcodeScannerAppState.PRINTING);
-  const _printed = () => setAppState(BarcodeScannerAppState.PRINTED);
+  const _sync = () => setAppState(BarcodeScannerAppState.SYNC);
   const _home = () => setAppState(BarcodeScannerAppState.DEFAULT);
   const _settings = () => setAppState(BarcodeScannerAppState.SETTINGS);
 
@@ -125,21 +126,22 @@ export default function Main() {
 
   const handleInitialsInput = (newInitials: string) => {
     setInitials(newInitials);
-    const newSampleId = [barCodeId, newInitials, format(sampleDate, dateFormat), locationStr].join('-');
+    const newSampleId = [barCodeId, newInitials, format(sampleDate, defaults.dateEncodedFormat), locationStr].join('-');
     setSampleId(newSampleId);
     setAppState(BarcodeScannerAppState.SCANNED);
   };
 
   const handleLineCountSubmitted = (newCount: number) => {
     const now = new Date();
-    const newId = `${locationStr}-${format(now, dateFormat)}`;
+    const newId = `${locationStr}-${format(now, defaults.dateEncodedFormat)}`;
     const newData: LineCount = {
       id: newId,
       lineCount: newCount,
       locationId: locationStr,
       createdAt: now,
     };
-    sendDataToFirebase([newData], countsCollection);
+
+    AsyncStorage.setItem(newData.id, JSON.stringify(newData)).then(_sync);
   }
 
   const ErrorMessage = (props: ElementProps): ReactElement => {
@@ -170,7 +172,7 @@ export default function Main() {
     </View>
   }
 
-  function App(props: StateProps): ReactElement {
+  const AppContent = (props: StateProps): ReactElement => {
     switch (props.appState) {
       case BarcodeScannerAppState.INITIAL:
         return <LoadingMessage/>;
@@ -180,7 +182,7 @@ export default function Main() {
           <InputIdButton onClicked={_inputIdNumber}/>
           <InputLineCountButton onClicked={_inputLineCount}/>
         </View>;
-      case BarcodeScannerAppState.PRINTED:
+      case BarcodeScannerAppState.SYNC:
         return <SyncMessage
           isConnected={isConnected}
           samplesCollection={samplesCollection}
@@ -192,7 +194,7 @@ export default function Main() {
         return <View style={styles.container}>
           <PrintingMessage
             numCopies={numCopies}
-            onCancel={_printed}
+            onCancel={_sync}
             id={sampleId}
             barCodeId={barCodeId}
             date={sampleDate}
@@ -270,7 +272,7 @@ export default function Main() {
         <Appbar.Action icon="settings" onPress={_settings}/>
       </Appbar.Header>
       <SafeAreaView style={styles.safeAreaView}>
-        <App appState={appState}/>
+        <AppContent appState={appState}/>
       </SafeAreaView>
     </PaperProvider>
   );
