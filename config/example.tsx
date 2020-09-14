@@ -12,7 +12,7 @@ export const firebaseConfig = {
   databaseURL: 'database_url_goes_here',
   projectId: 'project_id_goes_here',
   storageBucket: 'storage_bucket_goes_here',
-  messagingSenderId: 'sender_id_goes_here',
+  messagingSenderId: 'messaging_sender_id_goes_here',
   appId: 'app_id_goes_here',
 };
 
