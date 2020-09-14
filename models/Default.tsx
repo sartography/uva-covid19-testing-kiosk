@@ -10,4 +10,6 @@ export interface AppDefaults {
   locationId: string;
   lineCountRegex: RegExp;
   qrCodeRegex: RegExp;
+  barCodeRegex: RegExp;
+  barCodeNumLength: number;
 }

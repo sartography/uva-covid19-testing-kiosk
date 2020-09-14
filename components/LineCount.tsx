@@ -1,8 +1,7 @@
-import {ButtonProps, InputLineCountScreenProps} from '../models/ElementProps';
 import React, {ReactElement, useState} from 'react';
 import {View} from 'react-native';
-import {DefaultTheme, Subheading, Title, RadioButton, Paragraph, TextInput, HelperText, Button} from 'react-native-paper';
-import {TextInput as NumberInput} from 'react-native';
+import {Button, DefaultTheme, HelperText, Subheading, TextInput, Title} from 'react-native-paper';
+import {ButtonProps, InputLineCountScreenProps} from '../models/ElementProps';
 import {colors, styles} from './Styles';
 
 export const InputLineCountButton = (props: ButtonProps): ReactElement => {

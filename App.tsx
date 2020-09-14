@@ -15,8 +15,8 @@ import {BarCodeDisplay, PrintButton, PrintingMessage} from './components/Print';
 import {IdNumberInput, InitialsInput, InputIdButton, ScanButton, Scanner} from './components/Scan';
 import {SettingsScreen} from './components/Settings';
 import {styles, theme} from './components/Styles';
-import {sendDataToFirebase, SyncMessage} from './components/Sync';
-import {firebaseConfig, defaults} from './config/default';
+import {SyncMessage} from './components/Sync';
+import {defaults, firebaseConfig} from './config/default';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
 import {CameraType, ElementProps, StateProps} from './models/ElementProps';
 import {LineCount} from './models/LineCount';
@@ -87,7 +87,8 @@ export default function Main() {
   }, []);
 
   // State event handlers
-  const _doNothing = () => {};
+  const _doNothing = () => {
+  };
   const _scan = () => {
     setErrorMessage('');
     setAppState(BarcodeScannerAppState.SCANNING);
@@ -107,13 +108,9 @@ export default function Main() {
 
   const handleBarCodeScanned = (e: BarCodeEvent) => {
     // Make sure the data is the right length.
-    // Scanned barcodes will be exactly 14 digits long.
-    // Manually-entered ID numbers will be exactly 9 digits long.
     const barCodeString = e.data;
-    const pattern = /^[\d]{14}$|^[\d]{9}$/;
-    console.log('barCodeString', barCodeString);
-    if (pattern.test(barCodeString)) {
-      const cardId = e.data.slice(0, 9);
+    if (defaults.barCodeRegex.test(barCodeString)) {
+      const cardId = e.data.slice(0, defaults.barCodeNumLength);
       const newSampleDate = new Date();
       setBarCodeId(cardId);
       setSampleDate(newSampleDate);

@@ -2,6 +2,7 @@ import {BarCodeScanner} from 'expo-barcode-scanner';
 import React, {ReactElement, useState} from 'react';
 import {Text, View} from 'react-native';
 import {Button, DefaultTheme, HelperText, Subheading, TextInput, Title} from 'react-native-paper';
+import {defaults} from '../config/default';
 import {ButtonProps, ElementProps, InputInitialsProps, ScannerProps} from '../models/ElementProps';
 import {colors, styles} from './Styles';
 
@@ -56,9 +57,8 @@ export const InputIdButton = (props: ButtonProps): ReactElement => {
 
 export const IdNumberInput = (props: ScannerProps): ReactElement => {
   const [inputStr, setInputStr] = useState<string>('');
-  const pattern = /^[\d]{9}$/;
   const hasErrors = () => {
-    return !pattern.test(inputStr);
+    return !defaults.barCodeRegex.test(inputStr);
   };
 
   const onSubmit = () => {
@@ -81,7 +81,7 @@ export const IdNumberInput = (props: ScannerProps): ReactElement => {
         keyboardType="numeric"
       />
       <HelperText type="error" visible={hasErrors()}>
-        ID number must be exactly 9 digits. No other characters are allowed.
+        ID number must be exactly {defaults.barCodeNumLength} digits. No other characters are allowed.
       </HelperText>
       <Button
         icon="check"
