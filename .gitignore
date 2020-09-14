@@ -670,3 +670,4 @@ web-build/
 *.hprof
 config/default.tsx
 
+..bfg-report
