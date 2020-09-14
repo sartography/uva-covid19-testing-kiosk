@@ -7,13 +7,13 @@ import {CameraType} from '../models/ElementProps';
 
 // Firebase project config from https://console.firebase.google.com > Project Settings > General > Your apps > Web App
 export const firebaseConfig = {
-  apiKey: 'API_KEY_GOES_HERE',
-  authDomain: 'uva-covid19-testing-kiosk.firebaseapp.com',
-  databaseURL: 'https://uva-covid19-testing-kiosk.firebaseio.com',
-  projectId: 'uva-covid19-testing-kiosk',
-  storageBucket: 'uva-covid19-testing-kiosk.appspot.com',
-  messagingSenderId: 'MESSAGING_SENDER_ID_GOES_HERE',
-  appId: 'APP_ID_GOES_HERE',
+  apiKey: 'api_key_goes_here',
+  authDomain: 'auth_domain_goes_here',
+  databaseURL: 'database_url_goes_here',
+  projectId: 'project_id_goes_here',
+  storageBucket: 'storage_bucket_goes_here',
+  messagingSenderId: 'messaging_sender_id_goes_here',
+  appId: 'app_id_goes_here',
 };
 
 // Default form field and data values
