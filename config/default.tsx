@@ -23,4 +23,7 @@ export const defaults: AppDefaults = {
   locationId: '0000',                                   // Default location ID. Can be overridden by user setting.
   lineCountRegex: /^[\d]{4}-[\d]{12}$/,                 // ID format for Line Count records.
   qrCodeRegex: /^[\d]{9}-[a-zA-Z]+-[\d]{12}-[\d]{4}$/,  // ID format for QR Code records.
+  barCodeNumLength: 9,                                  // Number of digits in Bar Code.
+  barCodeRegex: /^[\d]{14}$|^[\d]{9}$/,                 // Pattern for Bar Code data. Scanned barcodes will be either 9 or 14 digits long.
+                                                        // Manually-entered ID numbers will be exactly 9 digits long.
 }
