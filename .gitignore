@@ -668,3 +668,4 @@ buck-out/
 .expo/*
 web-build/
 *.hprof
+config/default.tsx

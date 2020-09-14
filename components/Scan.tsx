@@ -110,7 +110,7 @@ export const InitialsInput = (props: InputInitialsProps): ReactElement => {
   };
 
   const onSubmit = () => {
-    props.onSave(inputStr);
+    props.onSave(inputStr.toLowerCase());
   }
 
   return <View style={styles.settings}>
@@ -122,7 +122,7 @@ export const InitialsInput = (props: InputInitialsProps): ReactElement => {
       <TextInput
         label="Initials"
         value={inputStr}
-        onChangeText={inputStr => setInputStr(inputStr.toLowerCase())}
+        onChangeText={inputStr => setInputStr(inputStr)}
         mode="outlined"
         theme={DefaultTheme}
       />
