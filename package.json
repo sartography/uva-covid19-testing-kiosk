@@ -5,7 +5,8 @@
     "ios": "react-native run-ios",
     "web": "expo start --web",
     "debug-build": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/ && cd android && ./gradlew assembleDebug && cd ..",
-    "release-build": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/build/intermediates/res/merged/release/ && rm -rf android/app/src/main/res/drawable-* && rm -rf android/app/src/main/res/raw/* && cd android && ./gradlew assembleRelease && cd .."
+    "release-build": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/build/intermediates/res/merged/release/ && rm -rf android/app/src/main/res/drawable-* && rm -rf android/app/src/main/res/raw/* && cd android && ./gradlew assembleRelease && cd ..",
+    "windows": "react-native run-windows"
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.12.0",
@@ -24,7 +25,7 @@
     "qrcode-svg": "^1.1.0",
     "react": "~16.11.0",
     "react-dom": "~16.11.0",
-    "react-native": "~0.62.2",
+    "react-native": "^0.62.0-0",
     "react-native-canvas": "^0.1.37",
     "react-native-easy-grid": "^0.2.2",
     "react-native-gesture-handler": "~1.6.1",
@@ -40,7 +41,8 @@
     "react-native-unimodules": "~0.10.1",
     "react-native-vector-icons": "^7.0.0",
     "react-native-web": "~0.11.7",
-    "react-native-webview": "^10.8.3"
+    "react-native-webview": "^10.8.3",
+    "react-native-windows": "^0.62.0-0"
   },
   "devDependencies": {
     "@babel/core": "^7.8.6",
