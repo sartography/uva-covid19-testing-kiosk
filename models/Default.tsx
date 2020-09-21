@@ -1,4 +1,4 @@
-import {CameraType} from './ElementProps';
+import {CameraType, LabelLayout} from './ElementProps';
 
 export interface AppDefaults {
   countsCollection: string;
@@ -6,6 +6,7 @@ export interface AppDefaults {
   dateEncodedFormat: string;
   dateDisplayFormat: string;
   numCopies: number;
+  labelLayout: LabelLayout;
   cameraType: CameraType;
   locationId: string;
   lineCountRegex: RegExp;

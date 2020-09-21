@@ -1,4 +1,5 @@
 import {BarCodeScannedCallback} from 'expo-barcode-scanner';
+import {LabelLayoutType} from '../components/LabelLayout';
 import {BarcodeScannerAppState} from './BarcodeScannerAppState';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
@@ -37,9 +38,10 @@ export interface InputLineCountScreenProps extends ElementProps {
 
 export interface SettingsScreenProps extends ElementProps {
   cameraType: CameraType;
+  labelLayout: LabelLayoutType;
   numCopies: number;
   locationStr: string;
-  onSave: (newCameraType: CameraType, newNumCopies: number, newLocationStr: string) => void;
+  onSave: (newCameraType: CameraType, newLabelLayout: LabelLayoutType, newNumCopies: number, newLocationStr: string) => void;
   onCancel: () => void;
 }
 
@@ -58,6 +60,7 @@ export interface SyncProps extends ElementProps {
 }
 
 export interface PrintingProps extends BarCodeProps {
+  labelLayout: LabelLayoutType;
   numCopies: number;
   onCancel: () => void;
 }

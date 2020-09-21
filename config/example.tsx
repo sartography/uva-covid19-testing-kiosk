@@ -3,7 +3,7 @@
  Then modify the values below to match the actual Firebase configuration.
  */
 import {AppDefaults} from '../models/Default';
-import {CameraType} from '../models/ElementProps';
+import {CameraType, LabelLayout} from '../models/ElementProps';
 
 // Firebase project config from https://console.firebase.google.com > Project Settings > General > Your apps > Web App
 export const firebaseConfig = {
@@ -23,6 +23,7 @@ export const defaults: AppDefaults = {
   dateEncodedFormat: 'yyyyMMddHHmm',                    // Format for dates when encoded in IDs for database records.
   dateDisplayFormat: 'MM/dd/yyyy, hh:mm aa',            // Format for dates when displayed to user.
   numCopies: 2,                                         // Default number of copies of labels to print. Can be overridden by user setting.
+  labelLayout: 'round_32mm_1up' as LabelLayout,         // Which label layout to use for printing. Can be overridden by user setting.
   cameraType: 'back' as CameraType,                     // Which camera to use for capturing bar codes. Can be overridden by user setting.
   locationId: '0000',                                   // Default location ID. Can be overridden by user setting.
   lineCountRegex: /^[\d]{4}-[\d]{12}$/,                 // ID format for Line Count records.

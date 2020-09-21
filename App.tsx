@@ -18,7 +18,7 @@ import {styles, theme} from './components/Styles';
 import {SyncMessage} from './components/Sync';
 import {defaults, firebaseConfig} from './config/default';
 import {BarcodeScannerAppState} from './models/BarcodeScannerAppState';
-import {CameraType, ElementProps, StateProps} from './models/ElementProps';
+import {CameraType, ElementProps, LabelLayout, StateProps} from './models/ElementProps';
 import {LineCount} from './models/LineCount';
 import {Sample} from './models/Sample';
 
@@ -46,12 +46,14 @@ export default function Main() {
   const [samples, setSamples] = useState<Sample[]>([]);
   const [lineCounts, setLineCounts] = useState<LineCount[]>([]);
   const [cameraType, setCameraType] = useState<CameraType>(defaults.cameraType);
+  const [labelLayout, setLabelLayout] = useState<LabelLayout>(defaults.labelLayout);
   const [numCopies, setNumCopies] = useState<number>(defaults.numCopies);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [initials, setInitials] = useState<string>('');
 
   const defaultsInitializers = {
     'default.cameraType': (s: string) => setCameraType(s as CameraType),
+    'default.labelLayout': (s: string) => setLabelLayout(s as LabelLayout),
     'default.numCopies': (s: string) => setNumCopies(parseInt(s, 10)),
     'default.locationStr': (s: string) => setLocationStr(s),
   };
@@ -190,6 +192,7 @@ export default function Main() {
       case BarcodeScannerAppState.PRINTING:
         return <View style={styles.container}>
           <PrintingMessage
+            labelLayout={labelLayout}
             numCopies={numCopies}
             onCancel={_sync}
             id={sampleId}
@@ -235,15 +238,23 @@ export default function Main() {
       case BarcodeScannerAppState.SETTINGS:
         return <SettingsScreen
           cameraType={cameraType}
+          labelLayout={labelLayout}
           numCopies={numCopies}
           locationStr={locationStr}
-          onSave={(newCameraType: CameraType, newNumCopies: number, newLocationStr: string) => {
+          onSave={(
+            newCameraType: CameraType,
+            newLabelLayout: LabelLayout,
+            newNumCopies: number,
+            newLocationStr: string
+          ) => {
             setCameraType(newCameraType);
+            setLabelLayout(newLabelLayout);
             setNumCopies(newNumCopies);
             setLocationStr(newLocationStr);
 
             AsyncStorage.multiSet([
               ['default.cameraType', newCameraType as string],
+              ['default.labelLayout', newLabelLayout as string],
               ['default.locationStr', newLocationStr],
               ['default.numCopies', newNumCopies.toString()],
             ]).then(() => {
