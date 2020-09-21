@@ -1,8 +1,8 @@
 {
   "expo": {
     "description": "UVA Testing Kiosk",
-    "name": "uva-covid19-testing-kiosk",
-    "slug": "uva-covid19-testing-kiosk",
+    "name": "uva_covid19_testing_kiosk",
+    "slug": "uva_covid19_testing_kiosk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

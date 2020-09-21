@@ -54,6 +54,6 @@
     "typescript": "~3.9.5"
   },
   "private": true,
-  "name": "uva-covid19-testing-kiosk",
+  "name": "uva_covid19_testing_kiosk",
   "version": "1.0.0"
 }
