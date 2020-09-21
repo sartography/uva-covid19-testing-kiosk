@@ -8,7 +8,7 @@ import QRCode from 'react-native-qrcode-svg';
 import {defaults} from '../config/default';
 import {BarCodeProps, ButtonProps, PrintingProps} from '../models/ElementProps';
 import {Sample} from '../models/Sample';
-import {labelLayouts} from './LabelLayout';
+import {labelLayouts} from '../models/LabelLayout';
 import {colors, styles} from './Styles';
 
 const qrcode = require('qrcode');

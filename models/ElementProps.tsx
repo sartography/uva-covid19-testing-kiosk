@@ -1,5 +1,5 @@
 import {BarCodeScannedCallback} from 'expo-barcode-scanner';
-import {LabelLayoutType} from '../components/LabelLayout';
+import {LabelLayoutType} from './LabelLayout';
 import {BarcodeScannerAppState} from './BarcodeScannerAppState';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
